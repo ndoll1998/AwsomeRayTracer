@@ -2,6 +2,7 @@
 
 // forward declarations
 class Scene;
+class Color;
 
 class Camera {
     private:
@@ -14,6 +15,7 @@ class Camera {
     float FOV_;
 
     /* private methods */
+    const Color get_pixel_color(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const;
     std::pair<Vec3f,Vec3f> ray(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const;
 
     public:

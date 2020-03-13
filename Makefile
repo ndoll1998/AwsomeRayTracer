@@ -4,8 +4,8 @@ SRCDIR=src
 OBJDIR=obj
 LIBDIR=lib/x64
 # Dependencies
-_DEPS = vec3f.hpp engine.hpp window.hpp camera.hpp scene.hpp geometry.hpp SDL2/SDL.h
-_OBJ = vec3f.o engine.o window.o camera.o scene.o geometry.o main.o 
+_DEPS = vec3f.hpp engine.hpp window.hpp camera.hpp scene.hpp geometry.hpp material.hpp SDL2/SDL.h
+_OBJ = vec3f.o engine.o window.o camera.o scene.o geometry.o material.o main.o 
 
 DEPS = $(patsubst %,$(INCDIR)/%,$(_DEPS))
 OBJ = $(patsubst %,$(OBJDIR)/%,$(_OBJ))

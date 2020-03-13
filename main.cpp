@@ -4,6 +4,7 @@
 #include "camera.hpp"
 #include "scene.hpp"
 #include "geometry.hpp"
+#include "material.hpp"
 #include <iostream>
 
 #define SDL_main main
@@ -27,8 +28,15 @@ int main()
     scene->get_active_camera()->transform(
         Vec3f(0, 0, 0), Vec3f(0, 1, 0), Vec3f(0, 0, 1)
     );
+    // add materials
+    unsigned int blue = scene->addMaterial(new BaseMaterial(0, 0, 255));
+    unsigned int red = scene->addMaterial(new BaseMaterial(255, 0, 0));
     // add geometries
-    scene->addGeometry(new Sphere(0, 1, 0, 0.3));
+    unsigned int s1 = scene->addGeometry(new Sphere(0.3, 1.5, -0.4, 0.4));
+    unsigned int s2 = scene->addGeometry(new Sphere(-0.2, 1, 0.2, 0.3));
+    // assign materials to geometries
+    scene->get_geometry(s1)->assign_material(blue);
+    scene->get_geometry(s1)->assign_material(red);
 
     // add scene to engine
     unsigned int scene_id = e->addScene(scene);

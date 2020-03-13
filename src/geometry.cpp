@@ -1,14 +1,12 @@
 #include "geometry.hpp"
 #include "math.h"
 
-/* constructors */
+/* Sphere */
 
 Sphere::Sphere(Vec3f center, float r): center_(center), radius_(r) {}
 Sphere::Sphere(float x, float y, float z, float r): center_(x, y, z), radius_(r) {}
 
-/* cast method */
-
-std::pair<bool, float> Sphere::cast(Vec3f origin, Vec3f dir) {
+std::pair<bool, float> Sphere::cast(const Vec3f origin, const Vec3f dir) const {
     // analytic solution of sphere-ray-intersection
     Vec3f L = origin - this->center_;
     float a = Vec3f::dot(dir, dir);
@@ -31,4 +29,10 @@ std::pair<bool, float> Sphere::cast(Vec3f origin, Vec3f dir) {
     }
     // return
     return std::make_pair(true, t);
+}
+
+Vec3f Sphere::normal(const Vec3f p) const {
+    // compute normal vector
+    Vec3f n = p - this->center_; n.normalize();
+    return n;
 }

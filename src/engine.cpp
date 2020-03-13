@@ -3,6 +3,7 @@
 #include "window.hpp"
 #include "scene.hpp"
 #include "camera.hpp"
+#include <time.h>
 #include <iostream>
 
 using namespace std;
@@ -66,7 +67,6 @@ void Engine::handle_events(void) {
 }
 
 void Engine::update(void) {
-    SDL_Delay(30);
 }
 
 void Engine::render(void) {
@@ -84,11 +84,17 @@ void Engine::run(void) {
 
     // mainloop
     while (this->running) {
+        // track time
+        time_t start = clock();
+
         // handle events and update
         this->handle_events();
         this->update();
         // render
         this->render();
+
+        // log fps
+        cout << "FPS: " << 1000 / (float)(clock() - start) << "\r"; cout.flush();
     }
 }
 

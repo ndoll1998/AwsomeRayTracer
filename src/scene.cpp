@@ -1,6 +1,7 @@
 #include "Scene.hpp"
 #include "Camera.hpp"
 #include "geometry.hpp"
+#include "material.hpp"
 #include <tuple>
 #include <iostream>
 
@@ -17,8 +18,9 @@ Scene::Scene(void): id(Scene::global_id) {
     // increase global id
     Scene::global_id++;
     // create vector to store cameras
-    this->cams = new vector<Camera*>();
+    this->materials = new vector<BaseMaterial*>();
     this->geometries = new vector<Geometry*>();
+    this->cams = new vector<Camera*>();
     // log
     cout << "Initialized scene " << this->id << endl;
 }
@@ -29,10 +31,12 @@ Scene::Scene(void): id(Scene::global_id) {
 Scene::~Scene(void) {
     // delete all instances in vectors
     for (Camera* cam : *this->cams) { delete cam; }
-    for (Geometry* geometry : *this->geometries) { delete geometry; }
+    for (Geometry* geo : *this->geometries) { delete geo; }
+    for (BaseMaterial* mat : *this->materials) { delete mat; }
     // delete vectors
     delete this->cams;
     delete this->geometries;
+    delete this->materials;
     // log
     cout << "Destroyed scene " << this->id << endl;
 }
@@ -40,9 +44,18 @@ Scene::~Scene(void) {
 
 /*** public methods ***/
 
-void Scene::addGeometry(Geometry* geometry) {
+unsigned int Scene::addMaterial(BaseMaterial* material) {
+    // add material to vector
+    this->materials->push_back(material);
+    // return id of material in scene
+    return this->materials->size() - 1;
+}
+
+unsigned int Scene::addGeometry(Geometry* geometry) {
     // add geometry to vector
     this->geometries->push_back(geometry);
+    // return id of geometry in scene
+    return this->geometries->size() - 1;
 }
 
 unsigned int Scene::addCamera(void) {
@@ -65,7 +78,7 @@ void Scene::activateCamera(unsigned int cam_id) {
 }
 
 
-tuple<bool, float, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) const {
+tuple<bool, Vec3f, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) const {
 
     float t = numeric_limits<float>::max(); Geometry* geometry = nullptr;
     // find intersection closest to origin
@@ -77,8 +90,12 @@ tuple<bool, float, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) c
             t = p.second; geometry = geo;
         }
     }
-    // create return tuple
-    return make_tuple<bool, float, Geometry*>(geometry != nullptr, move(t), move(geometry));
+    if (geometry != nullptr) {
+        // create return tuple
+        Vec3f ipoint = origin + dir * t;
+        return make_tuple<bool, Vec3f, Geometry*>(true, move(ipoint), move(geometry));
+    }
+    return make_tuple<bool, Vec3f, Geometry*>(false, Vec3f(), nullptr);
 }
 
 
