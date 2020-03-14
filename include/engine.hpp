@@ -1,6 +1,6 @@
 #include <vector>
 
-// forward declaration
+// forward declarations
 class Window;
 class Scene;
 
@@ -13,6 +13,8 @@ class Engine {
     Window *window;
     std::vector<Scene*>* scenes;
     Scene *active_scene;
+    /* OpenCL */
+
     /* engine members */
     bool running;
 

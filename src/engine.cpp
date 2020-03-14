@@ -1,8 +1,11 @@
+// external
 #include "SDL2/SDL.h"
+// internal
 #include "engine.hpp"
 #include "window.hpp"
 #include "scene.hpp"
 #include "camera.hpp"
+// standard
 #include <time.h>
 #include <iostream>
 

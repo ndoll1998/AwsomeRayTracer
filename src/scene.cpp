@@ -17,9 +17,10 @@ unsigned int Scene::global_id = 0;
 Scene::Scene(void): id(Scene::global_id) {
     // increase global id
     Scene::global_id++;
+    // create compressors for matrials and geometries
+    this->materialCompressor = new MemCompressor(100);
+    this->geometryCompressor = new MemCompressor(100);
     // create vector to store cameras
-    this->materials = new vector<BaseMaterial*>();
-    this->geometries = new vector<Geometry*>();
     this->cams = new vector<Camera*>();
     // log
     cout << "Initialized scene " << this->id << endl;
@@ -29,34 +30,19 @@ Scene::Scene(void): id(Scene::global_id) {
 /*** destructor ***/
 
 Scene::~Scene(void) {
+    // delete compressors
+    delete this->materialCompressor;
+    delete this->geometryCompressor;
     // delete all instances in vectors
     for (Camera* cam : *this->cams) { delete cam; }
-    for (Geometry* geo : *this->geometries) { delete geo; }
-    for (BaseMaterial* mat : *this->materials) { delete mat; }
     // delete vectors
     delete this->cams;
-    delete this->geometries;
-    delete this->materials;
     // log
     cout << "Destroyed scene " << this->id << endl;
 }
 
 
 /*** public methods ***/
-
-unsigned int Scene::addMaterial(BaseMaterial* material) {
-    // add material to vector
-    this->materials->push_back(material);
-    // return id of material in scene
-    return this->materials->size() - 1;
-}
-
-unsigned int Scene::addGeometry(Geometry* geometry) {
-    // add geometry to vector
-    this->geometries->push_back(geometry);
-    // return id of geometry in scene
-    return this->geometries->size() - 1;
-}
 
 unsigned int Scene::addCamera(void) {
     // create camera object
@@ -82,7 +68,9 @@ tuple<bool, Vec3f, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) c
 
     float t = numeric_limits<float>::max(); Geometry* geometry = nullptr;
     // find intersection closest to origin
-    for (Geometry* geo : *this->geometries) {
+    for (Compressable* e : *this->geometryCompressor->get_instances()) {
+        // convert compressable to geometry
+        Geometry* geo = (Geometry*)e;
         // cast intersection with geometry
         pair<bool, float> p = geo->cast(origin, dir);
         // check if geometry is closer

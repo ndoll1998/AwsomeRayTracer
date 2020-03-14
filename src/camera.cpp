@@ -37,7 +37,7 @@ void Camera::FOV(float FOV) { this->FOV_ = FOV*3.14159265/180; }
 
 /*** render ***/
 
-const Color Camera::get_pixel_color(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const {
+const Vec3f Camera::get_pixel_color(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const {
     // create ray through pixel and cast to all objects in scene
     pair<Vec3f, Vec3f> ray = this->ray(i, j, w, h);
     tuple<bool, Vec3f, Geometry*> intersect = this->scene->cast(ray.first, ray.second);
@@ -71,14 +71,14 @@ void Camera::render(void* pixels, unsigned int w, unsigned int h) const {
     for (int x = 0; x < w; x++) {
         for (int y = 0; y < h; y++) {
             // get color of pixel
-            Color c = this->get_pixel_color(x, y, w, h);
+            Vec3f c = this->get_pixel_color(x, y, w, h);
             // get values to override in pixel array
             int i = y * w + x;
             Uint8* base = ((Uint8 *)pixels) + (4 * i);
             // apply color to pixel
-            base[0] = c.r();
-            base[1] = c.g();
-            base[2] = c.b();
+            base[0] = c.x() * 255;
+            base[1] = c.y() * 255;
+            base[2] = c.z() * 255;
             base[3] = 255;
        }
     }

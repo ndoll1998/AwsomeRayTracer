@@ -1,39 +1,37 @@
 #include "vec3f.hpp"
+#include "memCompressor.hpp"
 
-/*** Color Class ***/
+/* abstract base materials */
 
-class Color {
-    private:
-    /* color values */
-    unsigned char r_, g_, b_;
+class BaseMaterial : public Compressable {
     public:
-    /* constructors */
-    Color(unsigned char r, unsigned char g, unsigned char b);
-    /* methods */
-    Color scale(float t) const;
-    Color add(const Color other) const;
-    /* operators */
-    Color operator*(const float t) const { return this->scale(t); }
-    Color operator*(const Color other) const { return this->add(other); }
-    /* getters */
-    unsigned char r(void) const { return this->r_; }
-    unsigned char g(void) const { return this->g_; }
-    unsigned char b(void) const { return this->b_; }
+    /* get color at position */
+    virtual const Vec3f color(const Vec3f p) const = 0;
 };
 
 
-/*** Materials ***/
+/* Color Material */
 
-class BaseMaterial {
+class ColorMaterialConfig : public Config {
+    public:
+    /* rgb values */
+    float r, g, b;
+    /* constructors */
+    ColorMaterialConfig(float r, float g, float b);
+};
 
+class ColorMaterial : public BaseMaterial {
     private:
-    /* color */
-    Color color_;
+    /* getter and setter */
+    Vec3f get_color(void) const;
+    void set_color(float r, float g, float b);
 
     public:
-    /* constructors */
-    BaseMaterial(int r, int g, int b);
-
-    /* get color at position */
-    virtual const Color color(const Vec3f p) const;
+    /* Matrial Type ID and required size */
+    const unsigned int get_type_id(void) const { return 0; }
+    const unsigned int get_size(void) const { return 3; }
+    /* apply config */
+    void apply(Config* config);
+    /* get color at given point */
+    const Vec3f color(const Vec3f p) const;
 };

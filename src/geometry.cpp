@@ -3,15 +3,35 @@
 
 /* Sphere */
 
-Sphere::Sphere(Vec3f center, float r): center_(center), radius_(r) {}
-Sphere::Sphere(float x, float y, float z, float r): center_(x, y, z), radius_(r) {}
+// Config
+SphereConfig::SphereConfig(float x, float y, float z, float r): x(x), y(y), z(z), r(r) {}
 
+// getters
+Vec3f Sphere::get_center(void) const { return Vec3f(this->read(0), this->read(1), this->read(2)); }
+float Sphere::get_radius(void) const { return this->read(3); }
+// setters
+void Sphere::set_center(float x, float y, float z) { this->write(0, x); this->write(1, y); this->write(2, z); }
+void Sphere::set_radius(float r) { this->write(3, r); }
+
+// apply config
+void Sphere::apply(Config* config) {
+    // convert config
+    SphereConfig* config_ = (SphereConfig*)config;
+    // apply values from configuration
+    this->set_center(config_->x, config_->y, config_->z);
+    this->set_radius(config_->r);
+}
+
+// ray-cast method
 std::pair<bool, float> Sphere::cast(const Vec3f origin, const Vec3f dir) const {
+    // get center and radius
+    Vec3f center = this->get_center();
+    float radius = this->get_radius();
     // analytic solution of sphere-ray-intersection
-    Vec3f L = origin - this->center_;
+    Vec3f L = origin - center;
     float a = Vec3f::dot(dir, dir);
     float b = 2 * Vec3f::dot(dir, L);
-    float c = Vec3f::dot(L, L) - this->radius_ * this->radius_;
+    float c = Vec3f::dot(L, L) - radius * radius;
     
     float t;
     // solve quadratic function
@@ -31,8 +51,9 @@ std::pair<bool, float> Sphere::cast(const Vec3f origin, const Vec3f dir) const {
     return std::make_pair(true, t);
 }
 
+// normal at specified position on surface
 Vec3f Sphere::normal(const Vec3f p) const {
     // compute normal vector
-    Vec3f n = p - this->center_; n.normalize();
+    Vec3f n = p - this->get_center(); n.normalize();
     return n;
 }
