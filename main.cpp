@@ -1,6 +1,6 @@
 #define SDL_main main
-#define CL_TARGET_OPENCL_VERSION 200
 
+// internal
 #include "Vec3f.hpp"
 #include "engine.hpp"
 #include "window.hpp"
@@ -8,12 +8,28 @@
 #include "scene.hpp"
 #include "geometry.hpp"
 #include "material.hpp"
+// external
+#include "CL/cl2.hpp"
+// standard
+#include <vector>
+
+using namespace std;
 
 int main() {
 
+    vector<int> a;
+    int* b = a.data();
+
+    // get opencl device to use
+    vector<cl::Platform> platforms; cl::Platform::get(&platforms);
+    vector<cl::Device> devices; platforms[1].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+    cl::Device device = devices[0];
+
     // create engine and window
     Engine *e = new Engine();
-    Window *win = new Window(500, 500);
+    Window *win = new Window(700, 500);
+    // assign opencl device
+    e->assignDevice(device);
     // assign and show window
     e->assignWindow(win);
     win->show();

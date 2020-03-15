@@ -33,9 +33,11 @@ void Compressable::write(unsigned int i, float v) {
 /*** Memory Compressor ***/
 
 MemCompressor::MemCompressor(unsigned int mem_size): memory_size_(mem_size), filled_(0) {
-    // create vectors
+    // allocate memory
     this->memory_ = new float[this->memory_size_];
+    // create vectors
     this->instances_ = new vector<Compressable*>();
+    this->type_ids_ = new vector<unsigned int>();
     // set memory tail
     this->memory_tail_ = this->memory_;
 }
@@ -47,5 +49,6 @@ MemCompressor::~MemCompressor(void) {
     for (Compressable* e : *this->instances_) { delete e; }
     // delete vectors
     delete this->instances_;
+    delete this->type_ids_;
 }
 

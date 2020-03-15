@@ -25,9 +25,9 @@ class Compressable {
     void id(unsigned int id);
     void data(float* data);
     /* get required data size to store instance */
-    virtual const unsigned int get_size(void) const = 0;
+    virtual unsigned int get_size(void) const = 0;
     /* get id of type */
-    virtual const unsigned int get_type_id(void) const = 0;
+    virtual unsigned int get_type_id(void) const = 0;
     /* apply config to obj */
     virtual void apply(Config* config) = 0;
 };
@@ -49,14 +49,19 @@ class MemCompressor {
     unsigned int memory_size_, filled_;
     /* store all instances */
     std::vector<Compressable*>* instances_; 
+    std::vector<unsigned int>* type_ids_;
 
     public:
     /* constructors and destructor */
     MemCompressor(unsigned int mem_size);
     ~MemCompressor(void);
     /* getter */
-    Compressable* get(unsigned int id) { return this->instances_->at(id); }
-    std::vector<Compressable*>* get_instances(void) { return this->instances_; }
+    float* data(void) const { return this->memory_; }
+    unsigned int filled(void) const { return this->filled_; }
+    Compressable* get(unsigned int id) const { return this->instances_->at(id); }
+    std::vector<Compressable*>* get_instances(void) const { return this->instances_; }
+    std::vector<unsigned int>* get_type_ids(void) const { return this->type_ids_; }
+    unsigned int n_instances(void) const { return this->instances_->size(); }
     /* factory method */
     template<class T> T* make(void) {
         // TODO: force T to inherit from Compressable
@@ -72,6 +77,7 @@ class MemCompressor {
             this->filled_ += obj->get_size();
             // add instance to vector
             this->instances_->push_back(obj);
+            this->type_ids_->push_back(obj->get_type_id());
         // handle memory overflow
         } else throw MemoryOverflow();
         // return object

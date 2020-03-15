@@ -1,5 +1,6 @@
 #include "Vec3f.hpp"
 #include "memCompressor.hpp"
+#include "_defines.h"
 
 // forward declaration
 class BaseMaterial;
@@ -7,14 +8,10 @@ class BaseMaterial;
 // abstract geometry class
 
 class Geometry : public Compressable {
-    private:
-    /* material id */
-    unsigned int material_;
-
     public:
     /* material */
-    void assign_material(unsigned int material) { this->material_ = material; }
-    unsigned int material(void) const { return this->material_; }
+    void assign_material(unsigned int material) { this->write(0, material); }
+    unsigned int material(void) const { return this->read(0); }
     /* abstract methods */
     /* cast ray with geometry */
     virtual std::pair<bool, float> cast(const Vec3f origin, const Vec3f dir) const = 0;
@@ -44,8 +41,8 @@ class Sphere : public Geometry {
 
     public:
     /* Geometry Type ID and required size */
-    const unsigned int get_type_id(void) const { return 0; }
-    const unsigned int get_size(void) const { return 4; }
+    unsigned int get_type_id(void) const { return GEOMETRY_SPHERE_TYPE_ID; }
+    unsigned int get_size(void) const { return GEOMETRY_SPHERE_TYPE_SIZE; }
     /* apply config */
     void apply(Config* config);
     /* override geometry method */

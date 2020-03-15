@@ -31,18 +31,18 @@ void Camera::transform(Vec3f pos, Vec3f dir, Vec3f up) {
 
 /*** setters ***/
 void Camera::position(Vec3f pos) { this->pos_ = pos; }
-void Camera::direction(Vec3f dir) { this->dir_ = dir; this->dir_.normalize(); }
+void Camera::direction(Vec3f dir) { this->dir_ = dir; this->dir_.normalize(); this->left_ = Vec3f::cross(this->dir_, this->up_); }
 void Camera::up(Vec3f up) { this->up_ = up; this->up_.normalize(); this->left_ = Vec3f::cross(this->dir_, this->up_); }
 void Camera::FOV(float FOV) { this->FOV_ = FOV*3.14159265/180; }
 
 /*** render ***/
 
 const Vec3f Camera::get_pixel_color(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const {
-    // create ray through pixel and cast to all objects in scene
+    // create ray throu pixel and cast to all objects in scene
     pair<Vec3f, Vec3f> ray = this->ray(i, j, w, h);
     tuple<bool, Vec3f, Geometry*> intersect = this->scene->cast(ray.first, ray.second);
     // no intersection
-    if (!get<0>(intersect)) return {0, 0, 0};
+    if (!get<0>(intersect)) return Vec3f(0, 0, 0);
     // get intersection point and intersection geometry from tuple
     Vec3f ipoint = get<1>(intersect);
     Geometry* geo = get<2>(intersect);

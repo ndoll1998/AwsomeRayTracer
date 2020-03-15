@@ -7,11 +7,11 @@
 SphereConfig::SphereConfig(float x, float y, float z, float r): x(x), y(y), z(z), r(r) {}
 
 // getters
-Vec3f Sphere::get_center(void) const { return Vec3f(this->read(0), this->read(1), this->read(2)); }
-float Sphere::get_radius(void) const { return this->read(3); }
+Vec3f Sphere::get_center(void) const { return Vec3f(this->read(1), this->read(2), this->read(3)); }
+float Sphere::get_radius(void) const { return this->read(4); }
 // setters
-void Sphere::set_center(float x, float y, float z) { this->write(0, x); this->write(1, y); this->write(2, z); }
-void Sphere::set_radius(float r) { this->write(3, r); }
+void Sphere::set_center(float x, float y, float z) { this->write(1, x); this->write(2, y); this->write(3, z); }
+void Sphere::set_radius(float r) { this->write(4, r); }
 
 // apply config
 void Sphere::apply(Config* config) {

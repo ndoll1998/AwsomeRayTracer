@@ -1,5 +1,6 @@
 #include "vec3f.hpp"
 #include "memCompressor.hpp"
+#include "_defines.h"
 
 /* abstract base materials */
 
@@ -28,8 +29,8 @@ class ColorMaterial : public BaseMaterial {
 
     public:
     /* Matrial Type ID and required size */
-    const unsigned int get_type_id(void) const { return 0; }
-    const unsigned int get_size(void) const { return 3; }
+    unsigned int get_type_id(void) const { return MATERIAL_COLORMATERIAL_TYPE_ID; }
+    unsigned int get_size(void) const { return MATERIAL_COLORMATERIAL_TYPE_SIZE; }
     /* apply config */
     void apply(Config* config);
     /* get color at given point */

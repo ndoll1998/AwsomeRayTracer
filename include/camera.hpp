@@ -28,6 +28,11 @@ class Camera {
     void direction(Vec3f dir);
     void up(Vec3f up);
     void FOV(float FOV);
+    /* getters */
+    Vec3f position(void) const { return this->pos_; }
+    Vec3f direction(void) const { return this->dir_; }
+    Vec3f up(void) const { return this->up_; }
+    float FOV(void) const { return this->FOV_; }
     /* render */
     void render(void* pixels, unsigned int w, unsigned int h) const;
 };

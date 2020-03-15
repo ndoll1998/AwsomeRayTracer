@@ -24,15 +24,20 @@ class Scene {
     /* constructors and destructor*/
     Scene(void);
     ~Scene(void);
-    /* public methods */
+    /* cast ray to scene */
+    std::tuple<bool, Vec3f, Geometry*> cast(const Vec3f origin, const Vec3f dir) const;
+    /* add, get and activate cameras */
     unsigned int addCamera(void);
     void activateCamera(unsigned int);
-    std::tuple<bool, Vec3f, Geometry*> cast(const Vec3f origin, const Vec3f dir) const;
-    /* getters */
+    Camera* get_camera(unsigned int cam_id) const { return this->cams->at(cam_id); }
     Camera* get_active_camera(void) const { return this->active_camera; }
+    /* get compressors */
+    const MemCompressor* get_material_compressor(void) const { return this->materialCompressor; }
+    const MemCompressor* get_geometry_compressor(void) const { return this->geometryCompressor; }
+    /* read compressors */
     BaseMaterial* get_material(unsigned int mat_id) const { return (BaseMaterial*)this->materialCompressor->get(mat_id); }
     Geometry* get_geometry(unsigned int geo_id) const { return (Geometry*)this->geometryCompressor->get(geo_id); }
-    Camera* get_camera(unsigned int cam_id) const { return this->cams->at(cam_id); }
+    /* getters */
     const unsigned int get_id(void) const { return this->id; }
     /* template methods */
     template<class T> unsigned int addMaterial(Config* conf) { return this->materialCompressor->make<T>(conf)->id(); }
