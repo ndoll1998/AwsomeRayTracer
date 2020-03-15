@@ -2,47 +2,38 @@
 #include "src/kernels/structs.cl"
 #include "src/kernels/geometry.cl"
 
-float3 advance_ray(Ray* ray, float t) {
+float3 ray_advance(Ray* ray, float t) {
     // compute point on ray at distance t
     return ray->origin + ray->direction * t;
 }
 
-int cast_ray(Ray* ray,
+int ray_cast_to_geometries(
+    Ray* ray,
     // geometries
-    __global float*        geometry_data,
-    __global unsigned int* geometry_ids,
-    unsigned int           n_geometries,
-    // return geometry
-    __global float** closest_ptr,
-    unsigned int* closest_geometry,
-    // return distance
-    float* t
+    Container* geometries,
+    // return geometry and distance
+    Geometry* closest, float* t
 ) {
-    // find first intersecting geometry
+    // find closest intersecting geometry
+    Geometry geometry; geometry.data = geometries->data;
     float t_cur; int hit = 0;
-    // ppinter to head of data of current geometry
-    __global float* cur_data_ptr = geometry_data;
     // loop throu all geometries
-    for (unsigned int i = 0; i < n_geometries; i++) {
-        // get geometry type
-        unsigned int geo_type = geometry_ids[i];
+    for (unsigned int i = 0; i < geometries->n; i++) {
+        // set current geometry type
+        geometry.type_id = geometries->type_ids[i];
         // cast ray to geometry
-        if (cast_geometry(ray, geo_type, cur_data_ptr, &t_cur)) {
-            // update clostest
+        if (geometry_cast_ray(ray, &geometry, &t_cur)) {
+            // update closest
             if ((t_cur < *t) || (!hit)) { 
-                *closest_ptr = cur_data_ptr;
-                *closest_geometry = i; 
+                closest->data = geometry.data;
+                closest->type_id = geometry.type_id;
                 *t = t_cur; 
             }
             // set hit
             hit = 1;
         }
         // increase pointer to next geometry
-        cur_data_ptr += get_geometry_type_size(geo_type);
+        geometry.data += geometry_get_type_size(geometry.type_id);
     }
     return hit;
-}
-
-float3 get_ray_color() {
-    
 }

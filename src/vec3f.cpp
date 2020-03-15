@@ -18,7 +18,7 @@ float Vec3f::magnitude(void) const {
     return sqrtf(Vec3f::dot(*this, *this));
 }
 
-void Vec3f::normalize(void) {
+Vec3f Vec3f::normalize(void) const {
     // compute norm
     float norm_squarred = Vec3f::dot(*this, *this);
     // already normalized
@@ -26,30 +26,35 @@ void Vec3f::normalize(void) {
         // compute norm - avoid division by zero
         float scale = 1 / (sqrtf(norm_squarred) + 1e-5);
         // normalize all elements
-        this->x(this->x() * scale);
-        this->y(this->y() * scale);
-        this->z(this->z() * scale);
+        return Vec3f::mul(*this, scale);
     }
+    return Vec3f(*this);
 }
 
 Vec3f Vec3f::rotate(const Vec3f axis, const float theta) const {
-    Vec3f norm_axis;
-    //normalize axis if necessary
-    float norm_squarred = Vec3f::dot(*this, *this);
-    // check if axis is already normalized
-    if (abs(norm_squarred - 1) > 1e-5) {
-        // normalize axis
-        float scale = 1 / (sqrtf(norm_squarred) + 1e-5);
-        norm_axis = axis * scale;
-    } else { norm_axis = axis; }
+    // normalize
+    Vec3f v = this->normalize();
+    Vec3f a = axis.normalize();
     // compute values
     float c = cos(theta), s = sin(theta);
-    float d = Vec3f::dot(norm_axis, *this);
-    Vec3f w = Vec3f::cross(norm_axis, *this);
+    float d = Vec3f::dot(a, v);
+    Vec3f w = Vec3f::cross(a, v);
     // Rodrigues' rotation formula
-    return (*this) * c + w * s + norm_axis * d * (1 - c);
+    return v * c + w * s + a * d * (1 - c);
 }
 
+Vec3f Vec3f::reflect(Vec3f axis) const {
+    // normalize
+    Vec3f v = this->normalize();
+    Vec3f a = axis.normalize();
+    // reflect v over axis a
+    return a * (Vec3f::dot(v, a) * 2) - v;
+}
+
+Vec3f Vec3f::clamp(float a, float b) const {
+    // create vector with clipped values
+    return Vec3f(min(max(a, this->x()), b), min(max(a, this->y()), b), min(max(a, this->z()), b));
+}
 
 /*** vec-vec-operators ***/
 

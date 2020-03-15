@@ -3,7 +3,7 @@
 #include "_defines.h"
 
 // forward declaration
-class BaseMaterial;
+class Material;
 
 // abstract geometry class
 

@@ -122,7 +122,7 @@ void Engine::run(void) {
     // prepare opencl buffer
     if (this->openCL_assigned) {
         // set ray cast kernel
-        kern = new cl::Kernel(*this->program, "get_pixel_color");
+        kern = new cl::Kernel(*this->program, "camera_get_pixel_color");
         // set buffers
         pixel_buf = new cl::Buffer(*this->context, CL_MEM_WRITE_ONLY, h * w * 4);
 
@@ -160,17 +160,25 @@ void Engine::run(void) {
             kern->setArg(5, material_ids);
             kern->setArg(6, this->active_scene->get_material_compressor()->n_instances());
 
+            // update material buffers
+            cl::Buffer light_buf(*this->context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, this->active_scene->get_light_compressor()->filled() * sizeof(float), this->active_scene->get_light_compressor()->data());
+            cl::Buffer light_ids(*this->context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, this->active_scene->get_light_compressor()->n_instances() * sizeof(unsigned int), this->active_scene->get_light_compressor()->get_type_ids()->data());
+            // set kernel arguments
+            kern->setArg(7, light_buf);
+            kern->setArg(8, light_ids);
+            kern->setArg(9, this->active_scene->get_light_compressor()->n_instances());
+
             // set camera position
             Vec3f temp = this->active_scene->get_active_camera()->position();
-            kern->setArg(7, temp.x()); kern->setArg(8, temp.y()); kern->setArg(9, temp.z());
+            kern->setArg(10, temp.x()); kern->setArg(11, temp.y()); kern->setArg(12, temp.z());
             // set camera direction
             temp = this->active_scene->get_active_camera()->direction();
-            kern->setArg(10, temp.x()); kern->setArg(11, temp.y()); kern->setArg(12, temp.z());
+            kern->setArg(13, temp.x()); kern->setArg(14, temp.y()); kern->setArg(15, temp.z());
             // set camera up direction
             temp = this->active_scene->get_active_camera()->up();
-            kern->setArg(13, temp.x()); kern->setArg(14, temp.y()); kern->setArg(15, temp.z());
+            kern->setArg(16, temp.x()); kern->setArg(17, temp.y()); kern->setArg(18, temp.z());
             // set camera fov
-            kern->setArg(16, this->active_scene->get_active_camera()->FOV());
+            kern->setArg(19, this->active_scene->get_active_camera()->FOV());
             
             // render on opencl device
             this->queue->enqueueNDRangeKernel(*kern, cl::NullRange, cl::NDRange(h, w));

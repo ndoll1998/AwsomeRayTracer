@@ -3,8 +3,9 @@
 #include "memCompressor.hpp"
 
 // forward declarations
-class BaseMaterial; class MaterialConfig;
-class Geometry; class GeometryConfig;
+class Material;
+class Geometry;
+class Light; 
 class Camera;
 
 class Scene {
@@ -14,6 +15,7 @@ class Scene {
     /* cameras and objects */
     MemCompressor* materialCompressor;
     MemCompressor* geometryCompressor;
+    MemCompressor* lightCompressor;
     std::vector<Camera*> *cams;
     /* active camera */
     Camera* active_camera;
@@ -25,7 +27,9 @@ class Scene {
     Scene(void);
     ~Scene(void);
     /* cast ray to scene */
-    std::tuple<bool, Vec3f, Geometry*> cast(const Vec3f origin, const Vec3f dir) const;
+    std::tuple<bool, float, Geometry*> cast(const Vec3f origin, const Vec3f dir) const;
+    /* get light color at point */
+    Vec3f light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* material) const;
     /* add, get and activate cameras */
     unsigned int addCamera(void);
     void activateCamera(unsigned int);
@@ -34,12 +38,15 @@ class Scene {
     /* get compressors */
     const MemCompressor* get_material_compressor(void) const { return this->materialCompressor; }
     const MemCompressor* get_geometry_compressor(void) const { return this->geometryCompressor; }
+    const MemCompressor* get_light_compressor(void) const { return this->lightCompressor; }
     /* read compressors */
-    BaseMaterial* get_material(unsigned int mat_id) const { return (BaseMaterial*)this->materialCompressor->get(mat_id); }
+    Material* get_material(unsigned int mat_id) const { return (Material*)this->materialCompressor->get(mat_id); }
     Geometry* get_geometry(unsigned int geo_id) const { return (Geometry*)this->geometryCompressor->get(geo_id); }
+    Light* get_light(unsigned int light_id) const { return (Light*)this->lightCompressor->get(light_id); }
     /* getters */
     const unsigned int get_id(void) const { return this->id; }
     /* template methods */
     template<class T> unsigned int addMaterial(Config* conf) { return this->materialCompressor->make<T>(conf)->id(); }
     template<class T> unsigned int addGeometry(Config* conf) { return this->geometryCompressor->make<T>(conf)->id(); }
+    template<class T> unsigned int addLight(Config* conf) { return this->lightCompressor->make<T>(conf)->id(); }
 };

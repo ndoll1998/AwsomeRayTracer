@@ -1,9 +1,13 @@
+// internal
 #include "Scene.hpp"
 #include "Camera.hpp"
 #include "geometry.hpp"
 #include "material.hpp"
+#include "light.hpp"
+// standard
 #include <tuple>
 #include <iostream>
+#include <math.h>
 
 using namespace std;
 
@@ -20,6 +24,7 @@ Scene::Scene(void): id(Scene::global_id) {
     // create compressors for matrials and geometries
     this->materialCompressor = new MemCompressor(100);
     this->geometryCompressor = new MemCompressor(100);
+    this->lightCompressor = new MemCompressor(100);
     // create vector to store cameras
     this->cams = new vector<Camera*>();
     // log
@@ -33,6 +38,7 @@ Scene::~Scene(void) {
     // delete compressors
     delete this->materialCompressor;
     delete this->geometryCompressor;
+    delete this->lightCompressor;
     // delete all instances in vectors
     for (Camera* cam : *this->cams) { delete cam; }
     // delete vectors
@@ -63,8 +69,7 @@ void Scene::activateCamera(unsigned int cam_id) {
     cout << "Activated camera " << cam_id << " in scene " << this->id << endl;
 }
 
-
-tuple<bool, Vec3f, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) const {
+tuple<bool, float, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) const {
 
     float t = numeric_limits<float>::max(); Geometry* geometry = nullptr;
     // find intersection closest to origin
@@ -80,10 +85,34 @@ tuple<bool, Vec3f, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) c
     }
     if (geometry != nullptr) {
         // create return tuple
-        Vec3f ipoint = origin + dir * t;
-        return make_tuple<bool, Vec3f, Geometry*>(true, move(ipoint), move(geometry));
+        return make_tuple<bool, float, Geometry*>(true, move(t), move(geometry));
     }
-    return make_tuple<bool, Vec3f, Geometry*>(false, Vec3f(), nullptr);
+    return make_tuple<bool, float, Geometry*>(false, 0.0, nullptr);
 }
 
+Vec3f Scene::light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* material) const {
 
+    Vec3f light_color(0, 0, 0);
+    // check for light
+    for (Compressable* e : *this->get_light_compressor()->get_instances()) {
+        // convert to light
+        Light* l = (Light*)e;
+        // create ray toward light and cast to scene
+        Vec3f light_dir = l->light_direction(p);
+        tuple<bool, float, Geometry*> light_cast = this->cast(p, light_dir);
+        // unpack tuple
+        bool intersect = get<0>(light_cast);
+        float t = get<1>(light_cast);
+        // on no intersection
+        if ((!intersect) || (intersect && (t < 0))) { 
+            // reflect light ray
+            Vec3f light_reflect = light_dir.reflect(normal);
+            // phong reflection model
+            float diffuse = Vec3f::dot(light_dir, normal) * material->diffuse(p);
+            float specular = pow(-Vec3f::dot(light_reflect, vision_dir), material->shininess(p)) * material->specular(p);
+            // add all together
+            light_color = light_color + l->color(p) * (diffuse + specular); 
+        }
+    }
+    return light_color;
+}

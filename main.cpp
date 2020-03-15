@@ -8,6 +8,7 @@
 #include "scene.hpp"
 #include "geometry.hpp"
 #include "material.hpp"
+#include "light.hpp"
 // external
 #include "CL/cl2.hpp"
 // standard
@@ -29,7 +30,7 @@ int main() {
     Engine *e = new Engine();
     Window *win = new Window(700, 500);
     // assign opencl device
-    e->assignDevice(device);
+    // e->assignDevice(device);
     // assign and show window
     e->assignWindow(win);
     win->show();
@@ -42,9 +43,11 @@ int main() {
     scene->get_active_camera()->transform(
         Vec3f(0, 0, 0), Vec3f(0, 1, 0), Vec3f(0, 0, 1)
     );
+    // add lights
+    unsigned int l1 = scene->addLight<PointLight>(new PointLightConfig(0, 0, -1, 0.5, 0.5, 0.5));
     // add materials
-    unsigned int blue = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(0, 0, 1));
-    unsigned int red = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(1, 0, 0));
+    unsigned int blue = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(0, 0, 1, 1, 1, 50));
+    unsigned int red = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(1, 0, 0, 1, 1, 100));
     // add geometries
     unsigned int s1 = scene->addGeometry<Sphere>(new SphereConfig(0.3, 1.5, -0.4, 0.4));
     unsigned int s2 = scene->addGeometry<Sphere>(new SphereConfig(-0.2, 1, 0.2, 0.3));
