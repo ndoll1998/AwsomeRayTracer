@@ -15,7 +15,7 @@ class Camera {
     float FOV_;
 
     /* private methods */
-    Vec3f get_color(pair<Vec3f, Vec3f>* ray, float dist, Geometry* geo) const;
+    Vec3f get_color(pair<Vec3f, Vec3f>* ray, unsigned int r_depth = 0) const;
     Vec3f get_pixel_color(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const;
     std::pair<Vec3f,Vec3f> ray(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const;
 

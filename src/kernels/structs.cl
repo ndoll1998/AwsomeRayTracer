@@ -1,6 +1,5 @@
 #pragma once
 
-
 /*** Camera ***/
 
 typedef struct Camera {
@@ -58,6 +57,8 @@ typedef struct ColorMaterial {
     float3 color;
     // phong values
     float diffuse, specular, shininess;
+    // reflection
+    float reflection;
 } ColorMaterial;
 
 /*** Lights ***/
@@ -68,3 +69,17 @@ typedef struct PointLight {
     float3 color;
 } PointLight;
 
+
+/*** Recursion Tree Node ***/
+
+typedef struct RecursionNode {
+    // ray of node
+    Ray ray;
+    // recursive parameters - used in build
+    float3 color_a, color_b;
+    float scale;
+    // recusive result - used in solve
+    float3 result_color;
+    // child nodes
+    struct RecursionNode* child_reflect_node;
+} RecursionNode;

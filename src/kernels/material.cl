@@ -7,6 +7,7 @@ void colormaterial_apply(__global float* data, ColorMaterial* mat) {
     // read data into material
     mat->color = (float3)(data[0], data[1], data[2]);
     mat->diffuse = data[3]; mat->specular = data[4]; mat->shininess = data[5];
+    mat->reflection = data[6];
 }
 
 float3 colormaterial_get_color(float3 p, Material* material) {
@@ -35,6 +36,13 @@ float colormaterial_get_shininess(float3 p, Material* material) {
     ColorMaterial color_material; colormaterial_apply(material->data, &color_material);
     // return color of material
     return color_material.shininess;
+}
+
+float colormaterial_get_reflection(float3 p, Material* material) {
+    // create color-material from data
+    ColorMaterial color_material; colormaterial_apply(material->data, &color_material);
+    // return color of material
+    return color_material.reflection;
 }
 
 
@@ -114,3 +122,16 @@ float material_get_shininess(
         case (MATERIAL_COLORMATERIAL_TYPE_ID): return colormaterial_get_shininess(p, material);
     }
 }
+
+float material_get_reflection(
+    // point of interest
+    float3 p, 
+    // material of interest
+    Material* material
+) {
+    // get color
+    switch (material->type_id) {
+        case (MATERIAL_COLORMATERIAL_TYPE_ID): return colormaterial_get_reflection(p, material);
+    }
+}
+

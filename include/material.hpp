@@ -8,6 +8,8 @@ class Material : public Compressable {
     public:
     /* get color at position */
     virtual const Vec3f color(const Vec3f p) const = 0;
+    /* reflection value */
+    virtual float reflection(Vec3f p) const = 0;
     /* phong reflection model values at position */
     virtual float diffuse(Vec3f p) const = 0;
     virtual float specular(Vec3f p) const = 0;
@@ -19,10 +21,10 @@ class Material : public Compressable {
 
 class ColorMaterialConfig : public Config {
     public:
-    /* rgb, diffuse and specular values */
-    float r, g, b, diff, spec, shiny;
+    /* rgb, phong and relection values */
+    float r, g, b, diff, spec, shiny, refl;
     /* constructors */
-    ColorMaterialConfig(float r, float g, float b, float diff, float spec, float shiny);
+    ColorMaterialConfig(float r, float g, float b, float diff, float spec, float shiny, float refl);
 };
 
 class ColorMaterial : public Material {
@@ -31,6 +33,7 @@ class ColorMaterial : public Material {
     Vec3f get_color(void) const;
     void set_color(float r, float g, float b);
     void set_phong(float diff, float spec, float shiny);
+    void set_reflection(float ref);
 
     public:
     /* Matrial Type ID and required size */
@@ -40,6 +43,8 @@ class ColorMaterial : public Material {
     void apply(Config* config);
     /* get color at given point */
     const Vec3f color(const Vec3f p) const;
+    /* get reflection value */
+    float reflection(Vec3f p) const;
     /* get phong reflection model values */
     float diffuse(Vec3f p) const;
     float specular(Vec3f p) const;

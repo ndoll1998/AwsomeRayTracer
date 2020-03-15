@@ -91,27 +91,29 @@ tuple<bool, float, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) c
 }
 
 Vec3f Scene::light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* material) const {
-
-    Vec3f light_color(0, 0, 0);
+    Vec3f light_color(0, 0, 0); 
     // check for light
     for (Compressable* e : *this->get_light_compressor()->get_instances()) {
         // convert to light
         Light* l = (Light*)e;
-        // create ray toward light and cast to scene
+        // create ray toward light
         Vec3f light_dir = l->light_direction(p);
+        // check if light ray is below 90 degrees
+        if (Vec3f::dot(light_dir, normal) <= EPS) continue;
+        // cast ray to scene
         tuple<bool, float, Geometry*> light_cast = this->cast(p, light_dir);
         // unpack tuple
         bool intersect = get<0>(light_cast);
         float t = get<1>(light_cast);
         // on no intersection
-        if ((!intersect) || (intersect && (t < 0))) { 
+        if ((!intersect) || (intersect && (t < EPS))) { 
             // reflect light ray
             Vec3f light_reflect = light_dir.reflect(normal);
             // phong reflection model
             float diffuse = Vec3f::dot(light_dir, normal) * material->diffuse(p);
             float specular = pow(-Vec3f::dot(light_reflect, vision_dir), material->shininess(p)) * material->specular(p);
             // add all together
-            light_color = light_color + l->color(p) * (diffuse + specular); 
+            light_color = light_color + l->color(p) * (diffuse + specular);
         }
     }
     return light_color;

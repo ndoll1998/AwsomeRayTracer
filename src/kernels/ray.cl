@@ -1,6 +1,7 @@
 #pragma once
 #include "src/kernels/structs.cl"
 #include "src/kernels/geometry.cl"
+#include "include/_defines.h"
 
 float3 ray_advance(Ray* ray, float t) {
     // compute point on ray at distance t
@@ -24,7 +25,7 @@ int ray_cast_to_geometries(
         // cast ray to geometry
         if (geometry_cast_ray(ray, &geometry, &t_cur)) {
             // update closest
-            if ((t_cur < *t) || (!hit)) { 
+            if ((t_cur < *t - EPS) || (!hit)) { 
                 closest->data = geometry.data;
                 closest->type_id = geometry.type_id;
                 *t = t_cur; 

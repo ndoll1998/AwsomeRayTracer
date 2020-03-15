@@ -48,7 +48,7 @@ std::pair<bool, float> Sphere::cast(const Vec3f origin, const Vec3f dir) const {
         t = std::min(q / a, c / q);
     }
     // return
-    return std::make_pair(true, t);
+    return std::make_pair(t > 0, t);
 }
 
 // normal at specified position on surface

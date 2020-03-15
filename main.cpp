@@ -30,7 +30,7 @@ int main() {
     Engine *e = new Engine();
     Window *win = new Window(700, 500);
     // assign opencl device
-    // e->assignDevice(device);
+    e->assignDevice(device);
     // assign and show window
     e->assignWindow(win);
     win->show();
@@ -45,12 +45,13 @@ int main() {
     );
     // add lights
     unsigned int l1 = scene->addLight<PointLight>(new PointLightConfig(0, 0, -1, 0.5, 0.5, 0.5));
+    unsigned int l2 = scene->addLight<PointLight>(new PointLightConfig(0, 3, -0.2, 0.5, 0.5, 0.5));
     // add materials
-    unsigned int blue = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(0, 0, 1, 1, 1, 50));
-    unsigned int red = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(1, 0, 0, 1, 1, 100));
+    unsigned int blue = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(0, 0, 1, 1, 1, 50, 3));
+    unsigned int red = scene->addMaterial<ColorMaterial>(new ColorMaterialConfig(1, 0, 0, 1, 1, 100, 3));
     // add geometries
-    unsigned int s1 = scene->addGeometry<Sphere>(new SphereConfig(0.3, 1.5, -0.4, 0.4));
-    unsigned int s2 = scene->addGeometry<Sphere>(new SphereConfig(-0.2, 1, 0.2, 0.3));
+    unsigned int s1 = scene->addGeometry<Sphere>(new SphereConfig(0.6, 2.5, 0, 0.7));
+    unsigned int s2 = scene->addGeometry<Sphere>(new SphereConfig(-0.7, 2, 0, 0.4));
     // assign materials to geometries
     scene->get_geometry(s1)->assign_material(blue);
     scene->get_geometry(s2)->assign_material(red);

@@ -31,7 +31,7 @@ int sphere_cast(Ray* ray, Geometry* geometry, float* t) {
             -0.5 * (b - sqrt(discr));
         *t = min(q/ a, c / q);
     }
-    return 1;
+    return (*t > 0);
 }
 
 float3 sphere_normal(float3 p, Geometry* geometry){
