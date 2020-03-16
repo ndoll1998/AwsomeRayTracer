@@ -10,7 +10,7 @@ void sphere_apply(__global float* data, Sphere* sphere) {
     sphere->radius = data[4];
 }
 
-int sphere_cast(Ray* ray, Geometry* geometry, float* t) {
+int sphere_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
     // create sphere from data
     Sphere s; sphere_apply(geometry->data, &s);
     // analytic solution of sphere-ray-intersection
@@ -31,10 +31,10 @@ int sphere_cast(Ray* ray, Geometry* geometry, float* t) {
             -0.5 * (b - sqrt(discr));
         *t = min(q/ a, c / q);
     }
-    return (*t > 0);
+    return (*t > EPS);
 }
 
-float3 sphere_normal(float3 p, Geometry* geometry){
+float3 sphere_normal(float3 p, Geometry* geometry, Globals* globals){
     // create sphere from data
     Sphere s; sphere_apply(geometry->data, &s);
     // compute normal at position p on surface
@@ -52,17 +52,17 @@ unsigned int geometry_get_type_size(unsigned int geometry_type) {
     }
 }
 
-int geometry_cast_ray(Ray* ray, Geometry* geometry, float* t) {
+int geometry_cast_ray(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
     // cast to geometry specified by type-id
     switch(geometry->type_id) {
-        case (GEOMETRY_SPHERE_TYPE_ID): return sphere_cast(ray, geometry, t);
+        case (GEOMETRY_SPHERE_TYPE_ID): return sphere_cast(ray, geometry, t, globals);
     }
 }
 
-float3 geometry_get_normal(float3 p, Geometry* geometry) {
+float3 geometry_get_normal(float3 p, Geometry* geometry, Globals* globals) {
     // get normal on surface of geometry specified by type and data
     switch(geometry->type_id) {
-        case (GEOMETRY_SPHERE_TYPE_ID): return sphere_normal(p, geometry);
+        case (GEOMETRY_SPHERE_TYPE_ID): return sphere_normal(p, geometry, globals);
     }
 }
 

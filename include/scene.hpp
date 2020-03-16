@@ -17,6 +17,8 @@ class Scene {
     MemCompressor* geometryCompressor;
     MemCompressor* lightCompressor;
     std::vector<Camera*> *cams;
+    /* ambient light */
+    Vec3f ambient_color;
     /* active camera */
     Camera* active_camera;
     /* scene members */
@@ -30,6 +32,8 @@ class Scene {
     std::tuple<bool, float, Geometry*> cast(const Vec3f origin, const Vec3f dir) const;
     /* get light color at point */
     Vec3f light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* material) const;
+    /* set ambient lightning */
+    void ambient(Vec3f ambient);
     /* add, get and activate cameras */
     unsigned int addCamera(void);
     void activateCamera(unsigned int);
@@ -44,6 +48,7 @@ class Scene {
     Geometry* get_geometry(unsigned int geo_id) const { return (Geometry*)this->geometryCompressor->get(geo_id); }
     Light* get_light(unsigned int light_id) const { return (Light*)this->lightCompressor->get(light_id); }
     /* getters */
+    Vec3f ambient(void) const { return this->ambient_color; }
     const unsigned int get_id(void) const { return this->id; }
     /* template methods */
     template<class T> unsigned int addMaterial(Config* conf) { return this->materialCompressor->make<T>(conf)->id(); }

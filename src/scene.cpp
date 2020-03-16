@@ -50,6 +50,8 @@ Scene::~Scene(void) {
 
 /*** public methods ***/
 
+void Scene::ambient(Vec3f ambient) { this->ambient_color = ambient; }
+
 unsigned int Scene::addCamera(void) {
     // create camera object
     unsigned int cam_id = this->cams->size();
@@ -91,7 +93,7 @@ tuple<bool, float, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) c
 }
 
 Vec3f Scene::light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* material) const {
-    Vec3f light_color(0, 0, 0); 
+    Vec3f light_color = Vec3f(this->ambient_color); 
     // check for light
     for (Compressable* e : *this->get_light_compressor()->get_instances()) {
         // convert to light
@@ -111,10 +113,11 @@ Vec3f Scene::light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* mate
             Vec3f light_reflect = light_dir.reflect(normal);
             // phong reflection model
             float diffuse = Vec3f::dot(light_dir, normal) * material->diffuse(p);
-            float specular = pow(-Vec3f::dot(light_reflect, vision_dir), material->shininess(p)) * material->specular(p);
+            float specular = pow(-Vec3f::dot(light_reflect, vision_dir) * material->specular(p), material->shininess(p));
             // add all together
             light_color = light_color + l->color(p) * (diffuse + specular);
         }
     }
     return light_color;
 }
+

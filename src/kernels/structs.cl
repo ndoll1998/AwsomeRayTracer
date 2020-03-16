@@ -1,4 +1,5 @@
 #pragma once
+#include "src/kernels/random.cl"
 
 /*** Camera ***/
 
@@ -52,14 +53,14 @@ typedef struct Sphere {
 
 /*** Materials ***/
 
-typedef struct ColorMaterial {
+typedef struct DiffuseMaterial {
     // color
     float3 color;
     // phong values
     float diffuse, specular, shininess;
-    // reflection
-    float reflection;
-} ColorMaterial;
+    // attenuation
+    float attenuation;
+} DiffuseMaterial;
 
 /*** Lights ***/
 
@@ -75,11 +76,22 @@ typedef struct PointLight {
 typedef struct RecursionNode {
     // ray of node
     Ray ray;
+    int hit;
     // recursive parameters - used in build
     float3 color_a, color_b;
     float scale;
     // recusive result - used in solve
     float3 result_color;
     // child nodes
-    struct RecursionNode* child_reflect_node;
+    struct RecursionNode* parent_node;
+    struct RecursionNode* child_scatter_node;
 } RecursionNode;
+
+
+/*** Globals ***/
+
+typedef struct Globals {
+    // values that need to be globally accessable in each work-item but can differ between work-items
+    // random number generator
+    mwc64x_state_t rng;
+} Globals;

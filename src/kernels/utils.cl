@@ -1,4 +1,11 @@
 #pragma once
+#include "src/kernels/random.cl"
+
+/*** defines ***/
+
+#define RANDOM_MAX 4294967296
+#define clamp(a, low, high) a
+
 
 /*** Vector-Operations ***/
 
@@ -16,6 +23,20 @@ float3 rotate_along_axis(float3 normalized_v, float3 normalized_axis, float thet
 float3 reflect(float3 normalized_v, float3 normalized_axis) {
     // reflect v over axis
     return normalized_axis * (dot(normalized_v, normalized_axis) * 2) - normalized_v;
+}
+
+float3 rand_in_unit_sphere(Globals* globals) {
+    // create random numbers between -1 and 1
+    float x = 2 * ((float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX) - 1;
+    float y = 2 * ((float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX) - 1;
+    float z = 2 * ((float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX) - 1;
+    // create vector
+    float3 v = (float3)(x, y, z);
+    // check if v is in unit circle
+    if (dot(v, v) < 1) return v;
+    // scale v to be in unit circle
+    float s = (float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX;
+    return normalize(v) * s;
 }
 
 

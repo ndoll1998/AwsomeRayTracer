@@ -3,13 +3,6 @@
 // forward declarations
 class Window;
 class Scene;
-namespace cl {
-    class Device;
-    class Context;
-    class CommandQueue;
-    class Program;
-    class Kernel;
-};
 
 // *** Engine Class ***
 
@@ -20,12 +13,6 @@ class Engine {
     Window *window;
     std::vector<Scene*>* scenes;
     Scene *active_scene;
-    /* OpenCL */
-    bool openCL_assigned = false;
-    const cl::Device* device;
-    cl::Context* context;
-    cl::CommandQueue* queue;
-    cl::Program* program;
     /* engine members */
     bool running;
 
@@ -38,9 +25,8 @@ class Engine {
     /* constructors and destructor */
     Engine(void);
     ~Engine(void);
-    /* assign opencl device and window */
-    void assignDevice(const cl::Device device);
-    void assignWindow(Window *window);
+    /* assign window and opencl device */
+    void assign(Window *window);
     /* add and activate scenes */
     void activateScene(unsigned int scene_id);
     unsigned int addScene(Scene* scene);

@@ -12,14 +12,14 @@ void pointlight_apply(__global float* data, PointLight* light) {
     light->position = (float3)(data[3], data[4], data[5]);
 }
 
-float3 pointlight_direction(float3 p, Light* light) {
+float3 pointlight_direction(float3 p, Light* light, Globals* globals) {
     // create pointlight from light
     PointLight plight; pointlight_apply(light->data, &plight);
     // return direction from p to light position
     return normalize(plight.position - p);
 }
 
-float3 pointlight_color(float3 p, Light* light) {
+float3 pointlight_color(float3 p, Light* light, Globals* globals) {
     // create pointlight from light
     PointLight plight; pointlight_apply(light->data, &plight);
     // return color
@@ -29,15 +29,15 @@ float3 pointlight_color(float3 p, Light* light) {
 
 /*** functions ***/
 
-float3 light_get_direction(float3 p, Light* light) {
+float3 light_get_direction(float3 p, Light* light, Globals* globals) {
     switch(light->type_id) {
-        case (LIGHT_POINTLIGHT_TYPE_ID): return pointlight_direction(p, light);
+        case (LIGHT_POINTLIGHT_TYPE_ID): return pointlight_direction(p, light, globals);
     }
 }
 
-float3 light_get_color(float3 p, Light* light) {
+float3 light_get_color(float3 p, Light* light, Globals* globals) {
     switch(light->type_id) {
-        case (LIGHT_POINTLIGHT_TYPE_ID): return pointlight_color(p, light);
+        case (LIGHT_POINTLIGHT_TYPE_ID): return pointlight_color(p, light, globals);
     }
 }
 
@@ -59,9 +59,13 @@ float3 light_get_total_light(
     // lights in scene
     Container* lights,
     // geometries in scene
-    Container* geometries
+    Container* geometries,
+    // ambient light color
+    float3 ambient,
+    // globals
+    Globals* globals
 ) {
-    float3 color = (0, 0, 0);
+    float3 color = ambient;
     // current light
     Light l; l.data = lights->data;
     // loop over all lights
@@ -69,18 +73,20 @@ float3 light_get_total_light(
         // set current light type
         l.type_id = lights->type_ids[i];
         // create ray from point towards light source
-        float3 light_dir = light_get_direction(p, &l);
+        float3 light_dir = light_get_direction(p, &l, globals);
         Ray r = (Ray){ p, light_dir };
+        // check angle
+        if (dot(light_dir, normal) <= EPS) continue;
         // check for objects between point and light-source
         Geometry closest; float t;
-        if ((!ray_cast_to_geometries(&r, geometries, &closest, &t)) || (t < 0)) {
+        if ( !ray_cast_to_geometries(&r, geometries, &closest, &t, globals) ) {
             // reflect light ray
             float3 light_reflect = reflect(light_dir, normal);
             // phong reflection model
-            float diffuse = dot(light_dir, normal) * material_get_diffuse(p, material);
-            float specular = pow(-dot(light_reflect, vision_dir) * material_get_specular(p, material), material_get_shininess(p, material));
+            float diffuse = dot(light_dir, normal) * material_get_diffuse(p, material, globals);
+            float specular = pow(-dot(light_reflect, vision_dir) * material_get_specular(p, material, globals), material_get_shininess(p, material, globals));
             // add all together
-            color += light_get_color(p, &l) * (diffuse + specular);
+            color += light_get_color(p, &l, globals) * (diffuse + specular);
         }
         l.data += light_get_type_size(l.type_id);
     }

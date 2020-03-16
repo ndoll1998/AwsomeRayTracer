@@ -13,7 +13,9 @@ int ray_cast_to_geometries(
     // geometries
     Container* geometries,
     // return geometry and distance
-    Geometry* closest, float* t
+    Geometry* closest, float* t,
+    // globals
+    Globals* globals
 ) {
     // find closest intersecting geometry
     Geometry geometry; geometry.data = geometries->data;
@@ -23,7 +25,7 @@ int ray_cast_to_geometries(
         // set current geometry type
         geometry.type_id = geometries->type_ids[i];
         // cast ray to geometry
-        if (geometry_cast_ray(ray, &geometry, &t_cur)) {
+        if (geometry_cast_ray(ray, &geometry, &t_cur, globals)) {
             // update closest
             if ((t_cur < *t - EPS) || (!hit)) { 
                 closest->data = geometry.data;

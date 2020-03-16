@@ -6,6 +6,23 @@
 Vec3f::Vec3f(void): x_(0), y_(0), z_(0) {}
 Vec3f::Vec3f(float x, float y, float z): x_(x), y_(y), z_(z) {}
 
+/*** static constructors ***/
+
+Vec3f Vec3f::rand_in_unit_circle(void) {
+    // create random numbers betweem -1 and 1
+    float x = 2 * ((float) std::rand() / RAND_MAX) - 1;
+    float y = 2 * ((float) std::rand() / RAND_MAX) - 1;
+    float z = 2 * ((float) std::rand() / RAND_MAX) - 1;
+    // fill vector
+    Vec3f p(x, y, z);
+    
+    // check if p is in unit circle
+    if (Vec3f::dot(p, p) < 1) return p;
+    // else scale it to be in unit circle
+    float m = (float) std::rand() / RAND_MAX;
+    return p.normalize() * m;
+}
+
 /*** public methods ***/
 
 float Vec3f::sum(void) const {

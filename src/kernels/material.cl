@@ -1,48 +1,57 @@
 #include "include/_defines.h"
 #include "src/kernels/structs.cl"
+#include "src/kernels/utils.cl"
 
-/*** Color Material ***/
+/*** Diffuse Material ***/
 
-void colormaterial_apply(__global float* data, ColorMaterial* mat) {
+void diffusematerial_apply(__global float* data, DiffuseMaterial* mat) {
     // read data into material
     mat->color = (float3)(data[0], data[1], data[2]);
     mat->diffuse = data[3]; mat->specular = data[4]; mat->shininess = data[5];
-    mat->reflection = data[6];
+    mat->attenuation = data[6];
 }
 
-float3 colormaterial_get_color(float3 p, Material* material) {
+float3 diffusematerial_get_color(float3 p, Material* material, Globals* globals) {
     // create color-material from data
-    ColorMaterial color_material; colormaterial_apply(material->data, &color_material);
+    DiffuseMaterial color_material; diffusematerial_apply(material->data, &color_material);
     // return color of material
     return color_material.color;
 }
 
-float colormaterial_get_diffuse(float3 p, Material* material) {
+float diffusematerial_get_diffuse(float3 p, Material* material, Globals* globals) {
     // create color-material from data
-    ColorMaterial color_material; colormaterial_apply(material->data, &color_material);
+    DiffuseMaterial color_material; diffusematerial_apply(material->data, &color_material);
     // return color of material
     return color_material.diffuse;
 }
 
-float colormaterial_get_specular(float3 p, Material* material) {
+float diffusematerial_get_specular(float3 p, Material* material, Globals* globals) {
     // create color-material from data
-    ColorMaterial color_material; colormaterial_apply(material->data, &color_material);
+    DiffuseMaterial color_material; diffusematerial_apply(material->data, &color_material);
     // return color of material
     return color_material.specular;
 }
 
-float colormaterial_get_shininess(float3 p, Material* material) {
+float diffusematerial_get_shininess(float3 p, Material* material, Globals* globals) {
     // create color-material from data
-    ColorMaterial color_material; colormaterial_apply(material->data, &color_material);
+    DiffuseMaterial color_material; diffusematerial_apply(material->data, &color_material);
     // return color of material
     return color_material.shininess;
 }
 
-float colormaterial_get_reflection(float3 p, Material* material) {
+float diffusematerial_get_attenuation(float3 p, float3 v, float3 n, Material* material, Globals* globals) {
     // create color-material from data
-    ColorMaterial color_material; colormaterial_apply(material->data, &color_material);
+    DiffuseMaterial color_material; diffusematerial_apply(material->data, &color_material);
     // return color of material
-    return color_material.reflection;
+    return color_material.attenuation;
+}
+
+int diffusematerial_get_scatter_ray(float3 p, float3 v, float3 n, Material* material, Ray* ray, Globals* globals) {
+    // write scattered ray
+    ray->origin = p;
+    ray->direction = normalize(n + rand_in_unit_sphere(globals));
+    // return if material scatters a ray at all
+    return diffusematerial_get_attenuation(p, v, n, material, globals) != 0;
 }
 
 
@@ -51,7 +60,7 @@ float colormaterial_get_reflection(float3 p, Material* material) {
 unsigned int material_get_type_size(unsigned int material_type_id) {
     // get type size of type given by type id
     switch (material_type_id) {
-        case (MATERIAL_COLORMATERIAL_TYPE_ID): return MATERIAL_COLORMATERIAL_TYPE_SIZE;
+        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID): return MATERIAL_DIFFUSEMATERIAL_TYPE_SIZE;
     }
 }
 
@@ -64,7 +73,7 @@ void material_get(
     Material* material
 ) {
     // make sure to stay in bounds
-    if (target_material_id > materials->n) printf("MaterialID out of bounds!\n");
+    // if (target_material_id > materials->n) printf("MaterialID out of bounds!\n");
     // pointer to material data given by index
     __global float* target_material_data = materials->data;
     // go to index
@@ -79,11 +88,13 @@ float3 material_get_base_color(
     // point of interest
     float3 p, 
     // material of interest
-    Material* material
+    Material* material,
+    // globals
+    Globals* globals
 ) {
     // get color
     switch (material->type_id) {
-        case (MATERIAL_COLORMATERIAL_TYPE_ID): return colormaterial_get_color(p, material);
+        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID): return diffusematerial_get_color(p, material, globals);
     }
 }
 
@@ -91,11 +102,13 @@ float material_get_diffuse(
     // point of interest
     float3 p, 
     // material of interest
-    Material* material
+    Material* material,
+    // globals
+    Globals* globals
 ) {
-    // get color
+    // get diffuse value
     switch (material->type_id) {
-        case (MATERIAL_COLORMATERIAL_TYPE_ID): return colormaterial_get_diffuse(p, material);
+        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID): return diffusematerial_get_diffuse(p, material, globals);
     }
 }
 
@@ -103,11 +116,13 @@ float material_get_specular(
     // point of interest
     float3 p, 
     // material of interest
-    Material* material
+    Material* material,
+    // globals
+    Globals* globals
 ) {
-    // get color
+    // get specular value
     switch (material->type_id) {
-        case (MATERIAL_COLORMATERIAL_TYPE_ID): return colormaterial_get_specular(p, material);
+        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID): return diffusematerial_get_specular(p, material, globals);
     }
 }
 
@@ -115,23 +130,43 @@ float material_get_shininess(
     // point of interest
     float3 p, 
     // material of interest
-    Material* material
+    Material* material,
+    // globals
+    Globals* globals
 ) {
-    // get color
+    // get shininess value
     switch (material->type_id) {
-        case (MATERIAL_COLORMATERIAL_TYPE_ID): return colormaterial_get_shininess(p, material);
+        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID): return diffusematerial_get_shininess(p, material, globals);
     }
 }
 
-float material_get_reflection(
-    // point of interest
-    float3 p, 
+float material_get_attenuation(
+    // point, view and normal of interest
+    float3 p, float3 v, float3 n,
     // material of interest
-    Material* material
+    Material* material,
+    // globals
+    Globals* globals
 ) {
-    // get color
+    // get attenuation value
     switch (material->type_id) {
-        case (MATERIAL_COLORMATERIAL_TYPE_ID): return colormaterial_get_reflection(p, material);
+        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID): return diffusematerial_get_attenuation(p, v, n, material, globals);
+    }
+}
+
+int material_get_scatter_ray(
+    // point, view and normal of interest
+    float3 p, float3 v, float3 n,
+    // material of interest
+    Material* material,
+    // scattered ray
+    Ray* ray,
+    // globals
+    Globals* globals
+) {
+    // get scatter ray
+    switch (material->type_id) {
+        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID): return diffusematerial_get_scatter_ray(p, v, n, material, ray, globals);
     }
 }
 
