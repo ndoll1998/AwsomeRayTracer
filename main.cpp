@@ -27,7 +27,7 @@ int main() {
     Engine *e = new Engine();
     // create window and assign it to engine
     Window *win = new Window(500, 300);
-    e->assign(win); win->show();
+    // e->assign(win); win->show();
 
     // create scene
     Scene *scene = new Scene();
@@ -45,8 +45,8 @@ int main() {
     unsigned int l1 = scene->addLight<PointLight>(new PointLightConfig(0, 0, -1, 0.5, 0.5, 0.5));
     unsigned int l2 = scene->addLight<PointLight>(new PointLightConfig(0, 3, -0.2, 0.5, 0.5, 0.5));
     // add materials
-    unsigned int gray = scene->addMaterial<DiffuseMaterial>(new DiffuseMaterialConfig(0, 0, 0, 1, 1, 100, 0.5));
     unsigned int orange = scene->addMaterial<DiffuseMaterial>(new DiffuseMaterialConfig(0, 0, 0, 1, 1, 100, 0.5));
+    unsigned int gray = scene->addMaterial<DiffuseMaterial>(new DiffuseMaterialConfig(0, 0, 0, 1, 1, 100, 0.5));
     // add geometries
     unsigned int s1 = scene->addGeometry<Sphere>(new SphereConfig(0, 1, 0, 0.5));
     unsigned int s2 = scene->addGeometry<Sphere>(new SphereConfig(0, 0, 100.5, 100));
@@ -58,9 +58,9 @@ int main() {
     unsigned int scene_id = e->addScene(scene);
     e->activateScene(scene_id);
     // run engine
-    e->run();
+    // e->run();
     // save image to file
-    // scene->get_active_camera()->render_to_file("img/test_img_gpu.bmp", 500, 300, 4);
+    scene->get_active_camera()->render_to_file("img/diffuse_gpu_2.bmp", 900, 500, 4);
 
     // destroy
     delete scene;

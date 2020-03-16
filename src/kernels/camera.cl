@@ -212,9 +212,11 @@ __kernel void camera_get_pixel_color(
     // create ambient light color
     float3 ambient = (float3) (ambient_r, ambient_g, ambient_b);
 
-    float3 color = (float3)(0, 0, 0);
+    // initialize color with ray throu middle of pixel
+    Ray ray; camera_get_ray_throu_pixel(&ray, x, y, w, h, cam, &globals);
+    float3 color = camera_get_ray_color(&ray, &geometries, &materials, &lights, ambient, &globals);
     // antialiasing
-    for (int j = 0; j < antialiasing_n_samples; j++) {
+    for (int j = 0; j < antialiasing_n_samples - 1; j++) {
         // get random offset from pixel center
         float u = 2 * ((float)MWC64X_NextUint(&globals.rng) / RANDOM_MAX) - 1;
         float v = 2 * ((float)MWC64X_NextUint(&globals.rng) / RANDOM_MAX) - 1;

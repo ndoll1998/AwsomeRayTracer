@@ -116,15 +116,16 @@ Vec3f Camera::get_color(pair<Vec3f, Vec3f>* ray, unsigned int r_depth) const {
 }
 
 Vec3f Camera::get_pixel_color(unsigned int i, unsigned int j, unsigned int w, unsigned int h) const {
-    // resulting color
-    Vec3f color(0, 0, 0);
+    // initialize with ray throu middle of pixel
+    pair<Vec3f, Vec3f> ray = this->ray(i, j, w, h);
+    Vec3f color = get_color(&ray);
     // antialiasing
-    for (int k = 0; k < this->n_samples; k++) {
+    for (int k = 0; k < this->n_samples - 1; k++) {
         // get random offset of pixel center
         float u = 2 * ((float)rand() / RAND_MAX) - 1;
         float v = 2 * ((float)rand() / RAND_MAX) - 1;
         // create ray throu random position in pixel
-        pair<Vec3f, Vec3f> ray = this->ray(i + u, j + v, w, h);
+        ray = this->ray(i + u, j + v, w, h);
         // get color of ray
         color = color + get_color(&ray);
     }
@@ -177,7 +178,7 @@ void Camera::prepare_rendering(unsigned int w, unsigned int h) {
             Kernel prepare_kern(*this->program, "camera_prepare_globals");
             prepare_kern.setArg(0, *this->globals_buf);
             // run kernel
-            cout << this->queue->enqueueNDRangeKernel(prepare_kern, cl::NullRange, cl::NDRange(h, w)) << endl;
+            this->queue->enqueueNDRangeKernel(prepare_kern, cl::NullRange, cl::NDRange(h, w));
             this->queue->finish();
             // set kernel argument
             this->kern->setArg(24, *this->globals_buf);
@@ -191,7 +192,7 @@ void Camera::clear_rendering(void) {
         // clear kernel and buffers
         delete this->kern;
         delete this->pixel_buf;
-        // delete this->globals_buf;
+        delete this->globals_buf;
     }
 }
 
