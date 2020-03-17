@@ -44,6 +44,8 @@ void camera_cast_ray(
     //  cast ray to all geometries
     Geometry closest; float t;
     if (ray_cast_to_geometries(&ray, geometries, &closest, &t, globals)) {
+        // mark ray as hit
+        cur_node->hit = 1;
         // get intersection point
         float3 p = ray_advance(&ray, t - EPS);
         // get material
@@ -51,13 +53,15 @@ void camera_cast_ray(
         Material material; material_get(material_id, materials, &material);
         // get normal of ray on geometry
         float3 normal = geometry_get_normal(p, &closest, globals);
-        // fill current node
-        cur_node->hit = 1;
-        cur_node->color_a = material_get_base_color(p, &material, globals);
-        cur_node->color_b = light_get_total_light(p, ray.direction, normal, &material, lights, geometries, ambient, globals);
-        // fill scatter node
-        if (material_get_scatter_ray(p, ray.direction, normal, &material, &cur_node->child_scatter_node->ray, globals))
-            cur_node->scale = material_get_attenuation(p, ray.direction, normal, &material, globals);
+        // get scatter node
+        if (material_get_scatter_ray(p, ray.direction, normal, &material, &cur_node->child_scatter_node->ray, globals)) {
+            // get attenuation and light-color
+            float3 attenuation = material_get_attenuation(p, ray.direction, normal, &material, globals);
+            float3 light_color = light_get_total_light(p, ray.direction, normal, &material, lights, geometries, ambient, globals);
+            // combine colors
+            cur_node->color = light_color * attenuation;
+        // no scatter
+        } else { cur_node->color = (float3)(0, 0, 0); }
     } else {
         // ray missed
         cur_node->hit = 0;
@@ -83,7 +87,6 @@ float3 camera_get_ray_color(
     // build root node
     recursion_nodes[0].ray.origin = ray->origin;
     recursion_nodes[0].ray.direction = ray->direction;
-    recursion_nodes[0].scale = 1;
     // set parent of root
     RecursionNode root_parent; root_parent.hit = 1;
     recursion_nodes[0].parent_node = & root_parent;
@@ -92,27 +95,28 @@ float3 camera_get_ray_color(
     int j; RecursionNode* node = recursion_nodes;
     // loop over all inner nodes of the recursion tree
     for (j = 0; j < n_inner_nodes; j++) {
-        // make sure that parent node hit any geometry
-        if (!node->parent_node->hit) continue;
         // set child-parent relation
         node->child_scatter_node = recursion_nodes + tree_get_child(j, 0, 1);
         node->child_scatter_node->parent_node = node;
+        // make sure that parent node hit any geometry
+        if (!node->parent_node->hit) {
+            // mark node as not hit and go to next node
+            node->hit = 0; continue;
+        }
         // build recursive node and go to next node
         camera_cast_ray(node++, geometries, materials, lights, ambient, globals);
     }
     RecursionNode trash_node;
     // loop over all leaf nodes
     for (int k = 0; k < n_leaf_nodes; k++) {
-        // make sure that parent node hit any geometry
-        if (!node->parent_node->hit) continue;
         // set child node to trash node
         node->child_scatter_node = &trash_node;
+        // make sure that parent node hit any geometry
+        if (!node->parent_node->hit) continue;
         // fill current node
         camera_cast_ray(node, geometries, materials, lights, ambient, globals);
-        // compute recursion result of leaf node
-        (node++)->result_color = clamp((1 - node->scale) * node->color_a, 0, 1) * node->color_b;
+        (node++)->color = clamp(node->color, 0.0f, 1.0f);
     }
-
     // get last inner node
     node = recursion_nodes + n_inner_nodes - 1;
     // solve recursion
@@ -120,18 +124,18 @@ float3 camera_get_ray_color(
         // check if current node hit any geometry
         if (node->hit) {
             // compute recusion result of current node
-            float3 fcolor = (node->color_a * node->scale + node->child_scatter_node->result_color * (1 - node->scale)) * node->color_b;
-            node->result_color = clamp(fcolor, 0, 1);
+            node->color = node->color * node->child_scatter_node->color;
+            node->color = clamp(node->color, 0.0f, 1.0f);
         } else {
             // fill with background color
             float t = 0.5 * (1.0 - node->ray.direction.z);
-            node->result_color = (1 - t) + (float3)(0.5, 0.7, 1.0) * t;
+            node->color = (1 - t) + (float3)(0.5, 0.7, 1.0) * t;
         }
         node--;
     }
 
     // return resulting color of root node
-    return recursion_nodes->result_color;
+    return recursion_nodes->color;
 }
 
 
@@ -228,7 +232,7 @@ __kernel void camera_get_pixel_color(
     // apply gamma correction
     color = sqrt(color / antialiasing_n_samples);
     // clamp color values between 0 and 255
-    color = clamp(color, 0, 1); color *= 255;
+    color = clamp(color, 0.0f, 1.0f); color *= 255;
     // apply color to pixel
     pixels[i*4+0] = color.x;
     pixels[i*4+1] = color.y;

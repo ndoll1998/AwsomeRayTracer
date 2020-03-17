@@ -3,7 +3,7 @@
 /*** Basics ***/
 
 #define EPS 1e-5
-#define MAX_RECURSION_DEPTH 3
+#define MAX_RECURSION_DEPTH 50
 
 /*** Geometries ***/
 
@@ -14,9 +14,12 @@
 
 /*** Materials ***/
 
-/* Color Material */
+/* Diffuse Material */
 #define MATERIAL_DIFFUSEMATERIAL_TYPE_ID 0
-#define MATERIAL_DIFFUSEMATERIAL_TYPE_SIZE 7
+#define MATERIAL_DIFFUSEMATERIAL_TYPE_SIZE 6
+/* Metal Material */
+#define MATERIAL_METALMATERIAL_TYPE_ID 1
+#define MATERIAL_METALMATERIAL_TYPE_SIZE 7
 
 
 /*** Lights ***/

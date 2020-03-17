@@ -54,13 +54,18 @@ typedef struct Sphere {
 /*** Materials ***/
 
 typedef struct DiffuseMaterial {
-    // color
-    float3 color;
+    // attenuation
+    float3 attenuation;
     // phong values
     float diffuse, specular, shininess;
-    // attenuation
-    float attenuation;
 } DiffuseMaterial;
+
+typedef struct MetalMaterial {
+    // base on diffuse material
+    DiffuseMaterial base;
+    // fuzzyness
+    float fuzz;
+} MetalMaterial;
 
 /*** Lights ***/
 
@@ -78,10 +83,7 @@ typedef struct RecursionNode {
     Ray ray;
     int hit;
     // recursive parameters - used in build
-    float3 color_a, color_b;
-    float scale;
-    // recusive result - used in solve
-    float3 result_color;
+    float3 color;
     // child nodes
     struct RecursionNode* parent_node;
     struct RecursionNode* child_scatter_node;

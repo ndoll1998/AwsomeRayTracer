@@ -14,7 +14,7 @@ class Vec3f {
     Vec3f(void);
     Vec3f(float x, float y, float z);
     /* static constructors */
-    static Vec3f rand_in_unit_circle(void);
+    static Vec3f rand_in_unit_sphere(void);
     /*  */
     float sum(void) const;
     float magnitude(void) const;

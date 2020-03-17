@@ -8,7 +8,7 @@ Vec3f::Vec3f(float x, float y, float z): x_(x), y_(y), z_(z) {}
 
 /*** static constructors ***/
 
-Vec3f Vec3f::rand_in_unit_circle(void) {
+Vec3f Vec3f::rand_in_unit_sphere(void) {
     // create random numbers betweem -1 and 1
     float x = 2 * ((float) std::rand() / RAND_MAX) - 1;
     float y = 2 * ((float) std::rand() / RAND_MAX) - 1;

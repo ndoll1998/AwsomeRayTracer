@@ -90,24 +90,21 @@ Vec3f Camera::get_color(pair<Vec3f, Vec3f>* ray, unsigned int r_depth) const {
     if (hit) {
         // get point of interest
         Vec3f p = ray->first + ray->second * (dist - EPS);
-        // get material of geometry and get base color
+        // get material and normal
         Material* material = this->scene->get_material(geo->material());
-        Vec3f color = material->color(p);
-        // get normal of geometry at intersection point
         Vec3f normal = geo->normal(p);
         // get scatter ray
-        float material_attenuation = material->attenuation(p, ray->second, normal);
-        if (material_attenuation != 0) {
-            // get scatter ray and cast color
-            pair<Vec3f, Vec3f> scatter_ray = material->scatter(p, ray->second, normal);
-            Vec3f scatter_color = this->get_color(&scatter_ray, r_depth + 1);
-            color = color * (1 - material_attenuation) + scatter_color * material_attenuation;
-        }
-        // get light color
-        Vec3f light_color = this->scene->light_color(p, ray->second, normal, material);
-        color = color * light_color;
-        // return final color
-        return color.clamp(0, 1);
+        pair<Vec3f, Vec3f> scattered;
+        if (material->scatter(p, ray->second, normal, &scattered)) {
+            // scatter and light color
+            Vec3f scatter_color = this->get_color(&scattered, r_depth + 1);
+            Vec3f light_color = this->scene->light_color(p, ray->second, normal, material);
+            // get attenuation and compute color
+            Vec3f attenuation = material->attenuation(p, ray->second, normal) * scatter_color;
+            Vec3f color = attenuation * light_color * scatter_color;
+            // return final color
+            return color.clamp(0, 1);
+        } else return Vec3f(0, 0, 0);
     } else { 
         // gradient background
         float t = 0.5 * (1.0 - ray->second.z());

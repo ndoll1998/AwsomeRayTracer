@@ -4,7 +4,6 @@
 /*** defines ***/
 
 #define RANDOM_MAX 4294967296
-#define clamp(a, low, high) a
 
 
 /*** Vector-Operations ***/

@@ -65,7 +65,7 @@ float3 light_get_total_light(
     // globals
     Globals* globals
 ) {
-    float3 color = ambient;
+    float3 color = (float3)ambient;
     // current light
     Light l; l.data = lights->data;
     // loop over all lights

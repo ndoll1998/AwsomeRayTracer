@@ -108,7 +108,7 @@ Vec3f Scene::light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* mate
         bool intersect = get<0>(light_cast);
         float t = get<1>(light_cast);
         // on no intersection
-        if ((!intersect) || (intersect && (t < EPS))) { 
+        if (!intersect) { 
             // reflect light ray
             Vec3f light_reflect = light_dir.reflect(normal);
             // phong reflection model
