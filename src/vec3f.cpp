@@ -68,6 +68,20 @@ Vec3f Vec3f::reflect(Vec3f axis) const {
     return a * (Vec3f::dot(v, a) * 2) - v;
 }
 
+bool Vec3f::refract(const Vec3f n_, float r, Vec3f* refracted) const {
+    // normalize
+    Vec3f v = this->normalize();
+    Vec3f n = n_.normalize();
+    // compute discriminant
+    float dt = Vec3f::dot(v, n);
+    float discr = 1.0 - r * r * (1.0 - dt * dt);
+    // check for total internal reflection
+    if (discr < 0) return false;
+    // refract ray if valid
+    *refracted = ((v - n * dt) * r) - (n * sqrt(discr));
+    return true;
+}
+
 Vec3f Vec3f::clamp(float a, float b) const {
     // create vector with clipped values
     return Vec3f(min(max(a, this->x()), b), min(max(a, this->y()), b), min(max(a, this->z()), b));

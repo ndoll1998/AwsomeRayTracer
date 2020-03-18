@@ -100,14 +100,14 @@ Vec3f Camera::get_color(pair<Vec3f, Vec3f>* ray, unsigned int r_depth) const {
             Vec3f scatter_color = this->get_color(&scattered, r_depth + 1);
             Vec3f light_color = this->scene->light_color(p, ray->second, normal, material);
             // get attenuation and compute color
-            Vec3f attenuation = material->attenuation(p, ray->second, normal) * scatter_color;
+            Vec3f attenuation = material->attenuation(p, ray->second, normal);
             Vec3f color = attenuation * light_color * scatter_color;
             // return final color
             return color.clamp(0, 1);
         } else return Vec3f(0, 0, 0);
     } else { 
         // gradient background
-        float t = 0.5 * (1.0 - ray->second.z());
+        float t = 0.5 * (1.0 - ray->second.normalize().z());
         return Vec3f(1.0, 1.0, 1.0) * (1.0 - t) + Vec3f(0.5, 0.7, 1.0) * t; 
     }
 }

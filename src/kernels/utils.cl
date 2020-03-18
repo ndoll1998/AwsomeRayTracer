@@ -1,10 +1,15 @@
 #pragma once
 #include "src/kernels/random.cl"
+#include "src/kernels/structs.cl"
 
-/*** defines ***/
+/*** random numbers ***/
 
 #define RANDOM_MAX 4294967296
 
+float randf(Globals* globals) {
+    // generate random number in [0, 1)
+    return (float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX;
+}
 
 /*** Vector-Operations ***/
 
@@ -24,17 +29,28 @@ float3 reflect(float3 normalized_v, float3 normalized_axis) {
     return normalized_axis * (dot(normalized_v, normalized_axis) * 2) - normalized_v;
 }
 
+int refract(float3 normalized_v, float3 normalized_axis, float r, float3* refracted) {
+    // compute discriminant
+    float dt = dot(normalized_v, normalized_axis);
+    float discr = 1.0 - r * r * (1.0 - dt * dt);
+    // check for total internal reflection
+    if (discr < 0) return 0;
+    // refract ray
+    *refracted = ((normalized_v - normalized_axis * dt) * r) - (normalized_axis * sqrt(discr));
+    return 1;
+}
+
 float3 rand_in_unit_sphere(Globals* globals) {
-    // create random numbers between -1 and 1
-    float x = 2 * ((float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX) - 1;
-    float y = 2 * ((float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX) - 1;
-    float z = 2 * ((float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX) - 1;
-    // create vector
-    float3 v = (float3)(x, y, z);
+    // create vector of random numbers
+    float3 v = (float3)(
+        2 * randf(globals) - 1, 
+        2 * randf(globals) - 1, 
+        2 * randf(globals) - 1
+    );
     // check if v is in unit circle
     if (dot(v, v) < 1) return v;
     // scale v to be in unit circle
-    float s = (float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX;
+    float s = 2 * randf(globals) - 1;
     return normalize(v) * s;
 }
 

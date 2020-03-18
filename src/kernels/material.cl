@@ -51,7 +51,7 @@ int diffusematerial_get_scatter_ray(float3 p, float3 v, float3 n, Material* mate
 
 void metalmaterial_apply(__global float* data, MetalMaterial* mat) {
     // apply base material
-    diffusematerial_apply(data, mat);
+    diffusematerial_apply(data, &mat->base);
     // apply fuzzyness value
     mat->fuzz = data[6];
 }
@@ -88,13 +88,87 @@ int metalmaterial_get_scatter_ray(float3 p, float3 v, float3 n, Material* materi
 }
 
 
+/*** Dielectric Material ***/
+
+void dielectricmaterial_apply(__global float* data, DielectricMaterial* mat) {
+    // read ior and phong values into material
+    mat->ior = data[0];
+    mat->diffuse = data[1]; mat->specular = data[2]; mat->shininess = data[3];
+}
+
+float dielectricmaterial_get_diffuse(float3 p, Material* material, Globals* globals) {
+    // read material
+    DielectricMaterial mat; dielectricmaterial_apply(material->data, &mat);
+    // read diffuse value
+    return mat.diffuse;
+}
+
+float dielectricmaterial_get_specular(float3 p, Material* material, Globals* globals) {
+    // read material
+    DielectricMaterial mat; dielectricmaterial_apply(material->data, &mat);
+    // read specular value
+    return mat.specular;
+}
+
+float dielectricmaterial_get_shininess(float3 p, Material* material, Globals* globals) {
+    // read material
+    DielectricMaterial mat; dielectricmaterial_apply(material->data, &mat);
+    // read shininess value
+    return mat.shininess;
+}
+
+float3 dielectricmaterial_get_attenuation(float3 p, float3 v, float3 n, Material* material, Globals* globals) {
+    // apply color of scattered ray
+    return (float3)(1.0, 1.0, 1.0);
+}
+
+int dielectricmaterial_get_scatter_ray(float3 p, float3 v, float3 n, Material* material, Ray* ray, Globals* globals) {
+    // get index of refraction of given material
+    DielectricMaterial mat; dielectricmaterial_apply(material->data, &mat);
+    float ior = mat.ior;
+    // set origin of scattered ray
+    ray->origin = p;
+
+    float3 refracted; int valid;
+    // schlick approximation
+    float cosine;
+    // get refracted direction
+    if (dot(v, n) > 0.0f) {
+        // leaving material
+        valid = refract(v, -n, ior, &refracted);
+        ray->origin += n * (5.0f * EPS); // move origin inside geometry
+        // get cosine angle for schlick approximation
+        cosine = dot(v, n);
+    } else {
+        // entering material
+        valid = refract(v, n, 1.0f / ior, &refracted);
+        ray->origin -= n * (5.0f * EPS); // move origin outside geometry
+        // get cosine angle for schlick approximation
+        cosine = -dot(v, n);
+    }
+
+    // fresnel
+    if (valid) {
+        // schlick approximation
+        float p = (1.0f - ior) / (1.0f + ior);
+        p = p * p; p = p + (1.0f - p) * pow(1.0f - cosine, 5);
+        // update valid based on probability
+        valid = randf(globals) > p;
+    }
+    // either reflect or refract
+    ray->direction = valid? refracted : -reflect(v, n);
+    return 1;
+}
+
+
 /*** functions ***/
 
 unsigned int material_get_type_size(unsigned int material_type_id) {
     // get type size of type given by type id
     switch (material_type_id) {
-        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID):    return MATERIAL_DIFFUSEMATERIAL_TYPE_SIZE;
-        case (MATERIAL_METALMATERIAL_TYPE_ID):      return MATERIAL_METALMATERIAL_TYPE_SIZE;
+        case (MATERIAL_DIFFUSE_TYPE_ID):    return MATERIAL_DIFFUSE_TYPE_SIZE;
+        case (MATERIAL_METAL_TYPE_ID):      return MATERIAL_METAL_TYPE_SIZE;
+        case (MATERIAL_DIELECTRIC_TYPE_ID):      return MATERIAL_DIELECTRIC_TYPE_SIZE;
     }
 }
 
@@ -108,8 +182,9 @@ float material_get_diffuse(
 ) {
     // get diffuse value
     switch (material->type_id) {
-        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID):    return diffusematerial_get_diffuse(p, material, globals);
-        case (MATERIAL_METALMATERIAL_TYPE_ID):      return metalmaterial_get_diffuse(p, material, globals);
+        case (MATERIAL_DIFFUSE_TYPE_ID):    return diffusematerial_get_diffuse(p, material, globals);
+        case (MATERIAL_METAL_TYPE_ID):      return metalmaterial_get_diffuse(p, material, globals);
+        case (MATERIAL_DIELECTRIC_TYPE_ID):    return dielectricmaterial_get_diffuse(p, material, globals);
     }
 }
 
@@ -123,8 +198,9 @@ float material_get_specular(
 ) {
     // get specular value
     switch (material->type_id) {
-        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID):    return diffusematerial_get_specular(p, material, globals);
-        case (MATERIAL_METALMATERIAL_TYPE_ID):      return metalmaterial_get_specular(p, material, globals);
+        case (MATERIAL_DIFFUSE_TYPE_ID):    return diffusematerial_get_specular(p, material, globals);
+        case (MATERIAL_METAL_TYPE_ID):      return metalmaterial_get_specular(p, material, globals);
+        case (MATERIAL_DIELECTRIC_TYPE_ID):    return dielectricmaterial_get_specular(p, material, globals);
     }
 }
 
@@ -138,8 +214,9 @@ float material_get_shininess(
 ) {
     // get shininess value
     switch (material->type_id) {
-        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID):    return diffusematerial_get_shininess(p, material, globals);
-        case (MATERIAL_METALMATERIAL_TYPE_ID):      return metalmaterial_get_shininess(p, material, globals);
+        case (MATERIAL_DIFFUSE_TYPE_ID):    return diffusematerial_get_shininess(p, material, globals);
+        case (MATERIAL_METAL_TYPE_ID):      return metalmaterial_get_shininess(p, material, globals);
+        case (MATERIAL_DIELECTRIC_TYPE_ID):    return dielectricmaterial_get_shininess(p, material, globals);
     }
 }
 
@@ -153,8 +230,9 @@ float3 material_get_attenuation(
 ) {
     // get attenuation value
     switch (material->type_id) {
-        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID):    return diffusematerial_get_attenuation(p, v, n, material, globals);
-        case (MATERIAL_METALMATERIAL_TYPE_ID):      return metalmaterial_get_attenuation(p, v, n, material, globals);
+        case (MATERIAL_DIFFUSE_TYPE_ID):    return diffusematerial_get_attenuation(p, v, n, material, globals);
+        case (MATERIAL_METAL_TYPE_ID):      return metalmaterial_get_attenuation(p, v, n, material, globals);
+        case (MATERIAL_DIELECTRIC_TYPE_ID):    return dielectricmaterial_get_attenuation(p, v, n, material, globals);
     }
 }
 
@@ -170,8 +248,9 @@ int material_get_scatter_ray(
 ) {
     // get scatter ray
     switch (material->type_id) {
-        case (MATERIAL_DIFFUSEMATERIAL_TYPE_ID):    return diffusematerial_get_scatter_ray(p, v, n, material, ray, globals);
-        case (MATERIAL_METALMATERIAL_TYPE_ID):      return metalmaterial_get_scatter_ray(p, v, n, material, ray, globals);
+        case (MATERIAL_DIFFUSE_TYPE_ID):    return diffusematerial_get_scatter_ray(p, v, n, material, ray, globals);
+        case (MATERIAL_METAL_TYPE_ID):      return metalmaterial_get_scatter_ray(p, v, n, material, ray, globals);
+        case (MATERIAL_DIELECTRIC_TYPE_ID):    return dielectricmaterial_get_scatter_ray(p, v, n, material, ray, globals);
     }
 }
 

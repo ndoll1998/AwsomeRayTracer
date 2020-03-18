@@ -85,6 +85,7 @@ tuple<bool, float, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) c
             t = p.second; geometry = geo;
         }
     }
+
     if (geometry != nullptr) {
         // create return tuple
         return make_tuple<bool, float, Geometry*>(true, move(t), move(geometry));

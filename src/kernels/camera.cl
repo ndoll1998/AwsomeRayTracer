@@ -222,8 +222,8 @@ __kernel void camera_get_pixel_color(
     // antialiasing
     for (int j = 0; j < antialiasing_n_samples - 1; j++) {
         // get random offset from pixel center
-        float u = 2 * ((float)MWC64X_NextUint(&globals.rng) / RANDOM_MAX) - 1;
-        float v = 2 * ((float)MWC64X_NextUint(&globals.rng) / RANDOM_MAX) - 1;
+        float u = 2 * randf(&globals) - 1;
+        float v = 2 * randf(&globals) - 1;
         // create ray throu pixel and get its color
         Ray ray; camera_get_ray_throu_pixel(&ray, x + u, y+ v, w, h, cam, &globals);
         color += camera_get_ray_color(&ray, &geometries, &materials, &lights, ambient, &globals);

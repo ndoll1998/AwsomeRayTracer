@@ -37,8 +37,8 @@ int sphere_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
 float3 sphere_normal(float3 p, Geometry* geometry, Globals* globals){
     // create sphere from data
     Sphere s; sphere_apply(geometry->data, &s);
-    // compute normal at position p on surface
-    return normalize(p - s.center);
+    // compute normalized normal at position p on surface
+    return (p - s.center) / s.radius;
 }
 
 

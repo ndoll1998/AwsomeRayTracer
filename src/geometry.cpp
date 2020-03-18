@@ -54,6 +54,6 @@ std::pair<bool, float> Sphere::cast(const Vec3f origin, const Vec3f dir) const {
 // normal at specified position on surface
 Vec3f Sphere::normal(const Vec3f p) const {
     // compute normal vector
-    Vec3f n = (p - this->get_center()).normalize();
+    Vec3f n = (p - this->get_center()) * (1 / this->get_radius());
     return n;
 }

@@ -35,8 +35,8 @@ class DiffuseMaterial : public Material {
 
     public:
     /* Matrial Type ID and required size */
-    unsigned int get_type_id(void) const { return MATERIAL_DIFFUSEMATERIAL_TYPE_ID; }
-    unsigned int get_size(void) const { return MATERIAL_DIFFUSEMATERIAL_TYPE_SIZE; }
+    unsigned int get_type_id(void) const { return MATERIAL_DIFFUSE_TYPE_ID; }
+    unsigned int get_size(void) const { return MATERIAL_DIFFUSE_TYPE_SIZE; }
     /* apply config */
     void apply(Config* config);
     /* override abstract methods */
@@ -55,7 +55,7 @@ class MetalMaterialConfig : public DiffuseMaterialConfig {
     public:
     float fuzzy;
     /* constructor */
-    MetalMaterialConfig(float r, float g, float b, float diff, float spec, float shiny, float fuzzy): DiffuseMaterialConfig(r, g, b, diff, spec, shiny), fuzzy(fuzzy) {}
+    MetalMaterialConfig(float r, float g, float b, float diff, float spec, float shiny, float fuzzy);
 };
 
 class MetalMaterial : public DiffuseMaterial {
@@ -66,10 +66,44 @@ class MetalMaterial : public DiffuseMaterial {
 
     public:
     /* Matrial Type ID and required size */
-    unsigned int get_type_id(void) const { return MATERIAL_METALMATERIAL_TYPE_ID; }
-    unsigned int get_size(void) const { return MATERIAL_METALMATERIAL_TYPE_SIZE; }
+    unsigned int get_type_id(void) const { return MATERIAL_METAL_TYPE_ID; }
+    unsigned int get_size(void) const { return MATERIAL_METAL_TYPE_SIZE; }
     /* pverride apply function */
     void apply(Config* config);
     /* override scatter function */
     bool scatter(Vec3f p, Vec3f v, Vec3f n, pair<Vec3f, Vec3f>* ray) const;
+};
+
+
+/* Dielectric Material */
+
+class DielectricMaterialConfig : public Config {
+    public:
+    /* phong and index of refraction values */
+    float diff, spec, shiny, ior;
+    /* constructors */
+    DielectricMaterialConfig(float diff, float spec, float shiny, float ior);
+};
+
+class DielectricMaterial : public Material {
+    private:
+    /* setters */
+    void set_ior(float ior);
+    void set_phong(float diff, float spec, float shiny);
+    /* getters */
+    float ior(void) const;
+
+    public:
+    /* Matrial Type ID and required size */
+    unsigned int get_type_id(void) const { return MATERIAL_DIELECTRIC_TYPE_ID; }
+    unsigned int get_size(void) const { return MATERIAL_DIELECTRIC_TYPE_SIZE; }
+    /* apply config */
+    void apply(Config* config);
+    /* override abstract methods */
+    bool scatter(Vec3f p, Vec3f v, Vec3f n, pair<Vec3f, Vec3f>* ray) const;
+    Vec3f attenuation(Vec3f p, Vec3f v, Vec3f n) const;
+    /* get phong reflection model values */
+    float diffuse(Vec3f p) const;
+    float specular(Vec3f p) const;
+    float shininess(Vec3f p) const;
 };

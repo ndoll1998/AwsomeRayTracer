@@ -19,10 +19,11 @@ class Vec3f {
     float sum(void) const;
     float magnitude(void) const;
     /*  */
+    Vec3f clamp(float a, float b) const;
     Vec3f normalize(void) const;
     Vec3f rotate(const Vec3f axis, const float angle) const;
     Vec3f reflect(const Vec3f axis) const;
-    Vec3f clamp(float a, float b) const;
+    bool refract(const Vec3f n, float ni_over_nt, Vec3f* refracted) const;
     /* vec-vec-operators */
     static Vec3f cross(const Vec3f a, const Vec3f b);
     static Vec3f mul(const Vec3f a, const Vec3f b);

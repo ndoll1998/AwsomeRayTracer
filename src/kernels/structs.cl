@@ -67,6 +67,13 @@ typedef struct MetalMaterial {
     float fuzz;
 } MetalMaterial;
 
+typedef struct DielectricMaterial {
+    // phong values
+    float diffuse, specular, shininess;
+    // index of refraction
+    float ior;
+} DielectricMaterial;
+
 /*** Lights ***/
 
 typedef struct PointLight {

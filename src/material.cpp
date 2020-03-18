@@ -1,4 +1,5 @@
 #include "material.hpp"
+#include "math.h"
 
 /*** Color Material ***/
 
@@ -33,19 +34,94 @@ void DiffuseMaterial::apply(Config* config) {
 
 /*** Metal Material ***/
 
-/* getter - setter */
+// config
+MetalMaterialConfig::MetalMaterialConfig(float r, float g, float b, float diff, float spec, float shiny, float fuzzy): 
+    DiffuseMaterialConfig(r, g, b, diff, spec, shiny), fuzzy(fuzzy) {}
+
+// getter - setter
 void MetalMaterial::set_fuzzy(float fuzzy) { this->write(6, fuzzy); }
 float MetalMaterial::fuzzy(void) const { return this->read(6); }
-/* apply config */
+// apply config
 void MetalMaterial::apply(Config* config) { 
+    // apply to base
     DiffuseMaterial::apply(config); 
+    // convert and apply fuzzyness-value
     MetalMaterialConfig* metal_config = (MetalMaterialConfig*)config;
     this->set_fuzzy(metal_config->fuzzy); 
 }
-/* scatter ray */
+// scatter ray
 bool MetalMaterial::scatter(Vec3f p, Vec3f v, Vec3f n, pair<Vec3f, Vec3f>* ray) const {
     // reflect vision ray at normal
     ray->first = p; 
     ray->second = ( v.reflect(n) * (-1) + Vec3f::rand_in_unit_sphere() * this->fuzzy() ).normalize();
     return (Vec3f::dot(ray->second, n) > 0);
+}
+
+
+/*** Dielectric Material ***/
+
+// config
+DielectricMaterialConfig::DielectricMaterialConfig(float diff, float spec, float shiny, float ior):
+    diff(diff), spec(spec), shiny(shiny), ior(ior) {}
+
+// setters
+void DielectricMaterial::set_ior(float ior) { this->write(0, ior); }
+void DielectricMaterial::set_phong(float diff, float spec, float shiny) { this->write(1, diff); this->write(2, spec); this->write(3, shiny); }
+// getters
+float DielectricMaterial::ior(void) const { return this->read(0); }
+// public getters
+float DielectricMaterial::diffuse(const Vec3f p) const { return this->read(1); }
+float DielectricMaterial::specular(const Vec3f p) const { return this->read(2); }
+float DielectricMaterial::shininess(const Vec3f p) const { return this->read(3); }
+// apply config
+void DielectricMaterial::apply(Config* config) {
+    // convert config
+    DielectricMaterialConfig* config_ = (DielectricMaterialConfig*)config;
+    // apply values
+    this->set_phong(config_->diff, config_->spec, config_->shiny);
+    this->set_ior(config_->ior);
+}
+
+
+float schlick_approximation(float cosine, float ior) {
+    // approximate probability of ray being reflected instead of refracted
+    float r0 = (1.0f - ior) / (1.0f + ior);
+    r0 = r0 * r0;
+    return r0 + (1.0f - r0) * pow(1.0f - cosine, 5);
+}
+
+// attenuation and scattered ray
+Vec3f DielectricMaterial::attenuation(Vec3f p, Vec3f v, Vec3f n) const { return Vec3f(1.0, 1.0, 1.0); }
+bool DielectricMaterial::scatter(Vec3f p, Vec3f v, Vec3f n, pair<Vec3f, Vec3f>* ray) const {
+    // set origin of scattered ray
+    ray->first = p;
+
+    Vec3f refracted; bool valid;
+    // schlick approximation
+    float cosine;
+    // get refraction 
+    if (Vec3f::dot(v, n) > 0.0f) {
+        // leaving material
+        valid = v.refract(n * (-1), this->ior(), &refracted);
+        ray->first = ray->first + n * (5 * EPS);    // move origin out of geometry
+        // get cosine angle for schlick approximation
+        cosine = Vec3f::dot(v, n);
+    } else {
+        // entering material
+        valid = v.refract(n, 1.0f / this->ior(), &refracted);
+        ray->first = ray->first - n * (5 * EPS);    // move origin in geometry
+        // get cosine angle for schlick approximation
+        cosine = -Vec3f::dot(v, n);
+    }
+
+    // fresnel
+    if (valid) {
+        // approximate reflection probability
+        float ref_prob = schlick_approximation(cosine, this->ior());
+        // update valid based on probability
+        valid = ((float)rand() / RAND_MAX) > ref_prob;
+    }
+    // either refract of reflect
+    ray->second = valid? refracted : (v.reflect(n) * -1);
+    return true;
 }

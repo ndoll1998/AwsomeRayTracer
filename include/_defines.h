@@ -2,8 +2,8 @@
 
 /*** Basics ***/
 
-#define EPS 1e-5
-#define MAX_RECURSION_DEPTH 50
+#define EPS 1e-5f   // make sure this is of float type
+#define MAX_RECURSION_DEPTH 5
 
 /*** Geometries ***/
 
@@ -15,11 +15,14 @@
 /*** Materials ***/
 
 /* Diffuse Material */
-#define MATERIAL_DIFFUSEMATERIAL_TYPE_ID 0
-#define MATERIAL_DIFFUSEMATERIAL_TYPE_SIZE 6
+#define MATERIAL_DIFFUSE_TYPE_ID 0
+#define MATERIAL_DIFFUSE_TYPE_SIZE 6
 /* Metal Material */
-#define MATERIAL_METALMATERIAL_TYPE_ID 1
-#define MATERIAL_METALMATERIAL_TYPE_SIZE 7
+#define MATERIAL_METAL_TYPE_ID 1
+#define MATERIAL_METAL_TYPE_SIZE 7
+/* Dielectric Material */
+#define MATERIAL_DIELECTRIC_TYPE_ID 2
+#define MATERIAL_DIELECTRIC_TYPE_SIZE 4
 
 
 /*** Lights ***/

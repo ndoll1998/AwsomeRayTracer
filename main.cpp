@@ -31,14 +31,14 @@ int main() {
 
     // create scene
     Scene *scene = new Scene();
-    scene->ambient(Vec3f(1, 1, 1));
+    scene->ambient(Vec3f(1.0, 1.0, 1.0));
 
     // set up camera
     unsigned int main_cam_id = scene->addCamera();
     scene->activateCamera(main_cam_id);
     scene->get_active_camera()->transform(Vec3f(0, 0, 0), Vec3f(0, 1, 0), Vec3f(0, 0, 1));
     scene->get_active_camera()->FOV(235);
-    scene->get_active_camera()->antialiasing(1);
+    scene->get_active_camera()->antialiasing(5);
     // assign opencl device to camera
     scene->get_active_camera()->assign(device);
 
@@ -48,28 +48,30 @@ int main() {
 
     // add materials
     unsigned int diffA = scene->addMaterial<DiffuseMaterial>(new DiffuseMaterialConfig(0.8, 0.3, 0.3, 1, 0, 0));
-    unsigned int diffB = scene->addMaterial<DiffuseMaterial>(new DiffuseMaterialConfig(0.8, 0.8, 0, 1, 0, 0));
-    unsigned int metalA = scene->addMaterial<MetalMaterial>(new MetalMaterialConfig(0.8, 0.8, 0.8, 1, 1, 100, 0.3));
-    unsigned int metalB = scene->addMaterial<MetalMaterial>(new MetalMaterialConfig(0.8, 0.8, 0.8, 1, 1, 100, 1.0));
+    unsigned int diffB = scene->addMaterial<DiffuseMaterial>(new DiffuseMaterialConfig(0.8, 0.9, 1.0, 1, 0, 0));
+    unsigned int metal = scene->addMaterial<MetalMaterial>(new MetalMaterialConfig(0.8, 0.6, 0.2, 1, 1, 100, 0.3));
+    unsigned int dielec = scene->addMaterial<DielectricMaterial>(new DielectricMaterialConfig(1, 1, 100, 1.5f));
 
     // add geometries
-    unsigned int s1 = scene->addGeometry<Sphere>(new SphereConfig(0, 1, 0, 0.5));
-    unsigned int s2 = scene->addGeometry<Sphere>(new SphereConfig(0, 0, 100.5, 100));
-    unsigned int s3 = scene->addGeometry<Sphere>(new SphereConfig(1, 1, 0, 0.5));
-    unsigned int s4 = scene->addGeometry<Sphere>(new SphereConfig(-1, 1, 0, 0.5));
+    unsigned int ground = scene->addGeometry<Sphere>(new SphereConfig(0, 0, 100000.5, 100000));
+    unsigned int left = scene->addGeometry<Sphere>(new SphereConfig(0.7, 1.2, 0, 0.5));
+    unsigned int middle = scene->addGeometry<Sphere>(new SphereConfig(0, 0.8, 0, 0.5));
+    unsigned int inner = scene->addGeometry<Sphere>(new SphereConfig(0, 0.8, 0, -0.49));
+    unsigned int right = scene->addGeometry<Sphere>(new SphereConfig(-0.7, 1.2, 0, 0.5));
     // assign materials to geometries
-    scene->get_geometry(s1)->assign_material(diffA);
-    scene->get_geometry(s2)->assign_material(diffB);
-    scene->get_geometry(s3)->assign_material(metalA);
-    scene->get_geometry(s4)->assign_material(metalB);
+    scene->get_geometry(ground)->assign_material(diffB);
+    scene->get_geometry(left)->assign_material(diffA);
+    scene->get_geometry(middle)->assign_material(dielec);
+    scene->get_geometry(inner)->assign_material(dielec);
+    scene->get_geometry(right)->assign_material(metal);
 
     // add scene to engine
     unsigned int scene_id = e->addScene(scene);
     e->activateScene(scene_id);
     // run engine
-    // e->run();
+    e->run();
     // save image to file
-    scene->get_active_camera()->render_to_file("img/metal_gpu.bmp", 900, 500, 4);
+    // scene->get_active_camera()->render_to_file("img/test.bmp", 900, 500, 4);
 
     // destroy
     delete scene;
