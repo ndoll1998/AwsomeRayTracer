@@ -82,21 +82,6 @@ typedef struct PointLight {
     float3 color;
 } PointLight;
 
-
-/*** Recursion Tree Node ***/
-
-typedef struct RecursionNode {
-    // ray of node
-    Ray ray;
-    int hit;
-    // recursive parameters - used in build
-    float3 color;
-    // child nodes
-    struct RecursionNode* parent_node;
-    struct RecursionNode* child_scatter_node;
-} RecursionNode;
-
-
 /*** Globals ***/
 
 typedef struct Globals {

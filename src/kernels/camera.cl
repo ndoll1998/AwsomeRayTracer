@@ -26,9 +26,10 @@ void camera_get_ray_throu_pixel(Ray *ray,
     ray->direction = normalize(dir);
 }
 
-void camera_cast_ray(
-    // current node
-    RecursionNode* cur_node,
+int camera_cast_ray(
+    // ray and return color
+    Ray* ray,
+    float3* color,
     // containers
     Container* geometries,
     Container* materials,
@@ -37,34 +38,30 @@ void camera_cast_ray(
     float3 ambient,
     // globals
     Globals* globals
-
 ) {
-    // get ray from current node
-    Ray ray = cur_node->ray;
     //  cast ray to all geometries
     Geometry closest; float t;
-    if (ray_cast_to_geometries(&ray, geometries, &closest, &t, globals)) {
-        // mark ray as hit
-        cur_node->hit = 1;
+    if (ray_cast_to_geometries(ray, geometries, &closest, &t, globals)) {
         // get intersection point
-        float3 p = ray_advance(&ray, t - EPS);
+        float3 p = ray_advance(ray, t - EPS);
         // get material
         unsigned int material_id = geometry_get_material_id(&closest);
         Material material; material_get(material_id, materials, &material);
         // get normal of ray on geometry
         float3 normal = geometry_get_normal(p, &closest, globals);
-        // get scatter node
-        if (material_get_scatter_ray(p, ray.direction, normal, &material, &cur_node->child_scatter_node->ray, globals)) {
-            // get attenuation and light-color
-            float3 attenuation = material_get_attenuation(p, ray.direction, normal, &material, globals);
-            float3 light_color = light_get_total_light(p, ray.direction, normal, &material, lights, geometries, ambient, globals);
-            // combine colors
-            cur_node->color = light_color * attenuation;
-        // no scatter
-        } else { cur_node->color = (float3)(0, 0, 0); }
+        // get attenuation and light-color
+        float3 attenuation = material_get_attenuation(p, ray->direction, normal, &material, globals);
+        float3 light_color = light_get_total_light(p, ray->direction, normal, &material, lights, geometries, ambient, globals);
+        // combine colors
+        *color = light_color * attenuation;
+        // get scatter node and update ray
+        return material_get_scatter_ray(p, ray->direction, normal, &material, ray, globals);
     } else {
+        // fill with background color
+        float t = 0.5 * (1.0 - ray->direction.z);
+        *color = (1 - t) + (float3)(0.5, 0.7, 1.0) * t;
         // ray missed
-        cur_node->hit = 0;
+        return 0;
     }
 }
 
@@ -80,64 +77,19 @@ float3 camera_get_ray_color(
     // globals
     Globals* globals
 ) {
-    // allocate array to store recursive tree
-    RecursionNode recursion_nodes[MAX_RECURSION_DEPTH + 1];
-    unsigned int n_inner_nodes = MAX_RECURSION_DEPTH;
-    unsigned int n_leaf_nodes = 1;
-    // build root node
-    recursion_nodes[0].ray.origin = ray->origin;
-    recursion_nodes[0].ray.direction = ray->direction;
-    // set parent of root
-    RecursionNode root_parent; root_parent.hit = 1;
-    recursion_nodes[0].parent_node = & root_parent;
-
-    // build recusion tree
-    int j; RecursionNode* node = recursion_nodes;
-    // loop over all inner nodes of the recursion tree
-    for (j = 0; j < n_inner_nodes; j++) {
-        // set child-parent relation
-        node->child_scatter_node = recursion_nodes + tree_get_child(j, 0, 1);
-        node->child_scatter_node->parent_node = node;
-        // make sure that parent node hit any geometry
-        if (!node->parent_node->hit) {
-            // mark node as not hit and go to next node
-            node->hit = 0; continue;
-        }
-        // build recursive node and go to next node
-        camera_cast_ray(node++, geometries, materials, lights, ambient, globals);
+    // base color
+    float3 color = (float3)(1.0f, 1.0f, 1.0f);
+    // scatter ray at most n times
+    for (int i = 0; i < MAX_RECURSION_DEPTH; i++) {
+        // cast ray
+        float3 ray_color; int scatters = camera_cast_ray(ray, &ray_color, geometries, materials, lights, ambient, globals);
+        // update color
+        color *= ray_color;
+        // only continue if scatters
+        if (!scatters) { break; }
     }
-    RecursionNode trash_node;
-    // loop over all leaf nodes
-    for (int k = 0; k < n_leaf_nodes; k++) {
-        // set child node to trash node
-        node->child_scatter_node = &trash_node;
-        // make sure that parent node hit any geometry
-        if (!node->parent_node->hit) continue;
-        // fill current node
-        camera_cast_ray(node, geometries, materials, lights, ambient, globals);
-        (node++)->color = clamp(node->color, 0.0f, 1.0f);
-    }
-    // get last inner node
-    node = recursion_nodes + n_inner_nodes - 1;
-    // solve recursion
-    for (int k = 0; k < n_inner_nodes; k++) {
-        // check if current node hit any geometry
-        if (node->hit) {
-            // compute recusion result of current node
-            node->color = node->color * node->child_scatter_node->color;
-            node->color = clamp(node->color, 0.0f, 1.0f);
-        } else {
-            // fill with background color
-            float t = 0.5 * (1.0 - node->ray.direction.z);
-            node->color = (1 - t) + (float3)(0.5, 0.7, 1.0) * t;
-        }
-        node--;
-    }
-
-    // return resulting color of root node
-    return recursion_nodes->color;
+    return color;    
 }
-
 
 /*** kernels ***/
 
