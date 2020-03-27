@@ -15,21 +15,21 @@ int sphere_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
     Sphere s; sphere_apply(geometry->data, &s);
     // analytic solution of sphere-ray-intersection
     float3 L = ray->origin - s.center;
-    float a = dot(ray->direction, ray->direction);
     float b = dot(ray->direction, L) * 2;
     float c = dot(L, L) - s.radius * s.radius;
     // solve quadratic function
-    float discr = b * b - 4 * a * c;
+    float discr = b * b - 4 * c;
     // no intersection
     if (discr < 0) return 0;
     // one intersection
-    else if (discr == 0) { *t = -0.5 * b / a; }
+    else if (discr == 0) { *t = -0.5 * b; }
     // two intersections
     else {
+        float sqrt_discr = sqrt(discr);
         float q = (b > 0)? 
-            -0.5 * (b + sqrt(discr)):
-            -0.5 * (b - sqrt(discr));
-        *t = min(q/ a, c / q);
+            -0.5 * (b + sqrt_discr):
+            -0.5 * (b - sqrt_discr);
+        *t = min(q, c / q);
     }
     return (*t > 0);
 }
