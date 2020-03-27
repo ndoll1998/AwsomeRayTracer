@@ -53,23 +53,3 @@ float3 rand_in_unit_sphere(Globals* globals) {
     float s = 2 * randf(globals) - 1;
     return normalize(v) * s;
 }
-
-
-/*** Tree-Opertations */
-
-int tree_get_parent(int node, int k) {
-    // get parent id from node id
-    return (int)((node - 1) / 2);
-}
-
-int tree_get_child(int parent, int child_id, int k) {
-    // get global child id in tree from local child id
-    return k * parent + child_id + 1;
-}
-
-int tree_get_size(int h, int k) {
-    // handle special case of k = 1
-    if (k == 1) { return h+1; }
-    // get numer of nodes in at k-tree of height h
-    return (k * (h + 1) - 1) / (k - 1);
-}
