@@ -178,7 +178,7 @@ void Camera::prepare_rendering(unsigned int w, unsigned int h) {
             this->queue->enqueueNDRangeKernel(prepare_kern, cl::NullRange, cl::NDRange(h, w));
             this->queue->finish();
             // set kernel argument
-            this->kern->setArg(24, *this->globals_buf);
+            this->kern->setArg(33, *this->globals_buf);
         }
     }
 }
@@ -202,39 +202,51 @@ void Camera::render_gpu(void* pixels, unsigned int w, unsigned int h) const {
     this->kern->setArg(1, geometry_buf);
     this->kern->setArg(2, geometry_ids);
     this->kern->setArg(3, this->scene->get_geometry_compressor()->n_instances());
+    this->kern->setArg(4, this->scene->get_geometry_compressor()->filled() * sizeof(float));
+    // allocate local memory
+    this->kern->setArg(5, this->scene->get_geometry_compressor()->filled() * sizeof(float), NULL);
+    this->kern->setArg(6, this->scene->get_geometry_compressor()->n_instances() * sizeof(unsigned int), NULL);
 
     // update material buffers
     cl::Buffer material_buf(*this->context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, this->scene->get_material_compressor()->filled() * sizeof(float), this->scene->get_material_compressor()->data());
     cl::Buffer material_ids(*this->context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, this->scene->get_material_compressor()->n_instances() * sizeof(unsigned int), this->scene->get_material_compressor()->get_type_ids()->data());
     // set kernel arguments
-    this->kern->setArg(4, material_buf);
-    this->kern->setArg(5, material_ids);
-    this->kern->setArg(6, this->scene->get_material_compressor()->n_instances());
+    this->kern->setArg(7, material_buf);
+    this->kern->setArg(8, material_ids);
+    this->kern->setArg(9, this->scene->get_material_compressor()->n_instances());
+    this->kern->setArg(10, this->scene->get_material_compressor()->filled() * sizeof(float));
+    // allocate local memory
+    this->kern->setArg(11, this->scene->get_material_compressor()->filled() * sizeof(float), NULL);
+    this->kern->setArg(12, this->scene->get_material_compressor()->n_instances() * sizeof(unsigned int), NULL);
 
-    // update material buffers
+    // update light buffers
     cl::Buffer light_buf(*this->context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, this->scene->get_light_compressor()->filled() * sizeof(float), this->scene->get_light_compressor()->data());
     cl::Buffer light_ids(*this->context, CL_MEM_COPY_HOST_PTR | CL_MEM_READ_ONLY, this->scene->get_light_compressor()->n_instances() * sizeof(unsigned int), this->scene->get_light_compressor()->get_type_ids()->data());
     // set kernel arguments
-    this->kern->setArg(7, light_buf);
-    this->kern->setArg(8, light_ids);
-    this->kern->setArg(9, this->scene->get_light_compressor()->n_instances());
+    this->kern->setArg(13, light_buf);
+    this->kern->setArg(14, light_ids);
+    this->kern->setArg(15, this->scene->get_light_compressor()->n_instances());
+    this->kern->setArg(16, this->scene->get_light_compressor()->filled() * sizeof(float));
+    // allocate local memory
+    this->kern->setArg(17, this->scene->get_light_compressor()->filled() * sizeof(float), NULL);
+    this->kern->setArg(18, this->scene->get_light_compressor()->n_instances() * sizeof(unsigned int), NULL);
 
     // set camera position
     Vec3f temp = this->scene->get_active_camera()->position();
-    this->kern->setArg(10, temp.x()); this->kern->setArg(11, temp.y()); this->kern->setArg(12, temp.z());
+    this->kern->setArg(19, temp.x()); this->kern->setArg(20, temp.y()); this->kern->setArg(21, temp.z());
     // set camera direction
     temp = this->scene->get_active_camera()->direction();
-    this->kern->setArg(13, temp.x()); this->kern->setArg(14, temp.y()); this->kern->setArg(15, temp.z());
+    this->kern->setArg(22, temp.x()); this->kern->setArg(23, temp.y()); this->kern->setArg(24, temp.z());
     // set camera up direction
     temp = this->scene->get_active_camera()->up();
-    this->kern->setArg(16, temp.x()); this->kern->setArg(17, temp.y()); this->kern->setArg(18, temp.z());
+    this->kern->setArg(25, temp.x()); this->kern->setArg(26, temp.y()); this->kern->setArg(27, temp.z());
     // set camera fov and antialiasing values
-    this->kern->setArg(19, this->scene->get_active_camera()->FOV());
-    this->kern->setArg(20, this->scene->get_active_camera()->antialiasing());
+    this->kern->setArg(28, this->scene->get_active_camera()->FOV());
+    this->kern->setArg(29, this->scene->get_active_camera()->antialiasing());
     // set ambient light color
-    this->kern->setArg(21, this->scene->ambient().x());
-    this->kern->setArg(22, this->scene->ambient().y());
-    this->kern->setArg(23, this->scene->ambient().z());
+    this->kern->setArg(30, this->scene->ambient().x());
+    this->kern->setArg(31, this->scene->ambient().y());
+    this->kern->setArg(32, this->scene->ambient().z());
 
     // render on opencl device
     this->queue->enqueueNDRangeKernel(*this->kern, cl::NullRange, cl::NDRange(h, w));

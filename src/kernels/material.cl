@@ -4,7 +4,7 @@
 
 /*** Diffuse Material ***/
 
-void diffusematerial_apply(__global float* data, DiffuseMaterial* mat) {
+void diffusematerial_apply(__local float* data, DiffuseMaterial* mat) {
     // read data into material
     mat->attenuation = (float3)(data[0], data[1], data[2]);
     mat->diffuse = data[3]; mat->specular = data[4]; mat->shininess = data[5];
@@ -49,7 +49,7 @@ int diffusematerial_get_scatter_ray(float3 p, float3 v, float3 n, Material* mate
 
 /*** Metal Material ***/
 
-void metalmaterial_apply(__global float* data, MetalMaterial* mat) {
+void metalmaterial_apply(__local float* data, MetalMaterial* mat) {
     // apply base material
     diffusematerial_apply(data, &mat->base);
     // apply fuzzyness value
@@ -90,7 +90,7 @@ int metalmaterial_get_scatter_ray(float3 p, float3 v, float3 n, Material* materi
 
 /*** Dielectric Material ***/
 
-void dielectricmaterial_apply(__global float* data, DielectricMaterial* mat) {
+void dielectricmaterial_apply(__local float* data, DielectricMaterial* mat) {
     // read ior and phong values into material
     mat->ior = data[0];
     mat->diffuse = data[1]; mat->specular = data[2]; mat->shininess = data[3];
@@ -265,7 +265,7 @@ void material_get(
     // make sure to stay in bounds
     if (target_material_id > materials->n) printf("MaterialID out of bounds!\n");
     // pointer to material data given by index
-    __global float* target_material_data = materials->data;
+    __local float* target_material_data = materials->data;
     // go to index
     for (unsigned int i = 0; i < target_material_id; i++)
         target_material_data += material_get_type_size(materials->type_ids[i]);

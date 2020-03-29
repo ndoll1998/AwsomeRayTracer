@@ -6,7 +6,7 @@
 
 /*** Point Light ***/
 
-void pointlight_apply(__global float* data, PointLight* light) {
+void pointlight_apply(__local float* data, PointLight* light) {
     // read data into light struct
     light->color = (float3)(data[0], data[1], data[2]);
     light->position = (float3)(data[3], data[4], data[5]);

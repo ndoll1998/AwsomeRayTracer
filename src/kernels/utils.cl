@@ -53,3 +53,33 @@ float3 rand_in_unit_sphere(Globals* globals) {
     float s = 2 * randf(globals) - 1;
     return normalize(v) * s;
 }
+
+/*** Memory ***/
+
+void global_to_local(__global char* global_data, __local char* local_data, unsigned int size) {
+    // get local size
+    unsigned int d = get_local_size(0);
+    unsigned int h = get_local_size(1);
+    unsigned int w = get_local_size(2);
+    // get local id
+    unsigned int z = get_local_id(0);   
+    unsigned int y = get_local_id(1);   
+    unsigned int x = get_local_id(2);   
+    // get flatten id and full size
+    unsigned int local_size = w * h * d;
+    unsigned int i = x + y * w + z * w * h;
+
+    // load data
+    for (int j = 0; j < ceil((float)size / (float)local_size); j++) {
+        // current index in data
+        unsigned int ii = i + j * local_size;
+        // check if index is in bounds
+        if (ii >= size) break;
+        // read data to local memory
+        local_data[ii] = global_data[ii];
+    }
+
+    // wait for all workers to finish
+    barrier(CLK_LOCAL_MEM_FENCE);
+}
+

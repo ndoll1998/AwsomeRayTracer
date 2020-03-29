@@ -120,14 +120,26 @@ __kernel void camera_get_pixel_color(
     __global float*         geometry_data,
     __global unsigned int*  geometry_ids,
     unsigned int            n_geometries,
+    unsigned int            n_geometry_bytes,
+    // local geometry memory
+    __local float*          loc_geometry_data,
+    __local unsigned int*   loc_geometry_ids,
     // materials
     __global float*         material_data,
     __global unsigned int*  material_ids,
     unsigned int            n_materials,
+    unsigned int            n_material_bytes,
+    // local material memory
+    __local float*          loc_material_data,
+    __local unsigned int*   loc_material_ids,
     // lights
     __global float*         light_data,
     __global unsigned int*  light_ids,
-    unsigned int            n_lights,
+    unsigned int            n_lights,    
+    unsigned int            n_light_bytes,
+    // local material memory
+    __local float*          loc_light_data,
+    __local unsigned int*   loc_light_ids,
     // camera orientation
     float cam_x, float cam_y, float cam_z,
     float cam_u, float cam_v, float cam_w,
@@ -149,13 +161,22 @@ __kernel void camera_get_pixel_color(
     // compute flatten index
     unsigned int i = x + y * w;
 
-    // build globals
+    // read globals to private memory
     Globals globals = all_globals[i];
 
+    // read ids to local memory
+    global_to_local((__global char*)geometry_ids, (__local char*)loc_geometry_ids, n_geometries * sizeof(unsigned int));
+    global_to_local((__global char*)material_ids, (__local char*)loc_material_ids, n_materials * sizeof(unsigned int));
+    global_to_local((__global char*)light_ids,    (__local char*)loc_light_ids,    n_lights * sizeof(unsigned int));
+    // read data to local memory
+    global_to_local((__global char*)geometry_data, (__local char*)loc_geometry_data, n_geometry_bytes);
+    global_to_local((__global char*)material_data, (__local char*)loc_material_data, n_geometry_bytes);
+    global_to_local((__global char*)light_data,    (__local char*)loc_light_data,    n_geometry_bytes);
+
     // create containers
-    Container geometries = (Container){geometry_data, geometry_ids, n_geometries};
-    Container materials  = (Container){material_data, material_ids, n_materials};
-    Container lights =     (Container){light_data, light_ids, n_lights};
+    Container geometries = (Container){loc_geometry_data, loc_geometry_ids, n_geometries};
+    Container materials  = (Container){loc_material_data, loc_material_ids, n_materials};
+    Container lights     = (Container){loc_light_data,    loc_light_ids,    n_lights};
 
     // create camera
     Camera cam = (Camera) {

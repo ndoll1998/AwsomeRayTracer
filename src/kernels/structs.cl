@@ -23,8 +23,8 @@ typedef struct Ray{
 
 typedef struct Container {
     // data and type-ids
-    __global float* data;
-    __global unsigned int* type_ids;
+    __local float* data;
+    __local unsigned int* type_ids;
     // number of elements in container
     unsigned int n;
 } Container;
@@ -33,7 +33,7 @@ typedef struct Container {
 /*** Compressable ***/
 
 typedef struct Compressable {
-    __global float* data;
+    __local float* data;
     unsigned int type_id;
 } Compressable;
 

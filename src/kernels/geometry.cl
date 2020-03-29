@@ -4,7 +4,7 @@
 
 /*** Sphere ***/
 
-void sphere_apply(__global float* data, Sphere* sphere) {
+void sphere_apply(__local float* data, Sphere* sphere) {
     // read data into sphere
     sphere->center = (float3)(data[1], data[2], data[3]);
     sphere->radius = data[4];
