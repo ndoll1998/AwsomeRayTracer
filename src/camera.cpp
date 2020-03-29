@@ -53,7 +53,7 @@ void Camera::assign(const Device device) {
     cl::Program::Sources source{ray_src};
     this->program = new cl::Program(*this->context, source);
     // build program
-    if (this->program->build("-cl-std=CL2.0") != CL_BUILD_SUCCESS) {
+    if (this->program->build() != CL_BUILD_SUCCESS) {
         // show build log
         cout << this->program->getBuildInfo<CL_PROGRAM_BUILD_LOG>(*this->device) << endl;
         throw;
