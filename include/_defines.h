@@ -3,13 +3,16 @@
 /*** Basics ***/
 
 #define EPS 1e-5f   // make sure this is of float type
-#define MAX_RECURSION_DEPTH 5
+#define MAX_RECURSION_DEPTH 4
 
 /*** Geometries ***/
 
 /* Sphere */
 #define GEOMETRY_SPHERE_TYPE_ID 0
 #define GEOMETRY_SPHERE_TYPE_SIZE 1 + 4
+/* Plane */
+#define GEOMETRY_PLANE_TYPE_ID 1
+#define GEOMETRY_PLANE_TYPE_SIZE 1 + 6
 
 
 /*** Materials ***/

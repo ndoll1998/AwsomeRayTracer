@@ -41,6 +41,35 @@ float3 sphere_normal(float3 p, Geometry* geometry, Globals* globals){
     return (p - s.center) / s.radius;
 }
 
+/*** Plane ***/
+
+void plane_apply(__local float* data, Plane* plane) {
+    // read origin and normal
+    plane->origin = (float3)(data[1], data[2], data[3]);
+    plane->normal = (float3)(data[4], data[5], data[6]);
+}
+
+int plane_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
+    // create plane from data
+    Plane plane; plane_apply(geometry->data, &plane);
+    // get normal and check if plane and ray are aligned
+    float denom = dot(plane.normal, ray->direction); 
+    if (denom < -EPS) { 
+        // compute distance to intersection point
+        float3 p = plane.origin - ray->origin; 
+        *t = dot(p, plane.normal) / denom;
+        return (*t >= EPS);
+    } 
+    // no intersection
+    return 0; 
+}
+
+float3 plane_normal(float3 p, Geometry* geometry, Globals* globals) {
+    // create plane from data
+    Plane plane; plane_apply(geometry->data, &plane);
+    // return normal
+    return plane.normal;
+}
 
 /*** functions ***/
 
@@ -48,7 +77,7 @@ unsigned int geometry_get_type_size(unsigned int geometry_type) {
     // return size of type specified by type-id
     switch(geometry_type) {
         case (GEOMETRY_SPHERE_TYPE_ID): return GEOMETRY_SPHERE_TYPE_SIZE;
-        default: break;
+        case (GEOMETRY_PLANE_TYPE_ID):  return GEOMETRY_PLANE_TYPE_SIZE;
     }
 }
 
@@ -56,6 +85,7 @@ int geometry_cast_ray(Ray* ray, Geometry* geometry, float* t, Globals* globals) 
     // cast to geometry specified by type-id
     switch(geometry->type_id) {
         case (GEOMETRY_SPHERE_TYPE_ID): return sphere_cast(ray, geometry, t, globals);
+        case (GEOMETRY_PLANE_TYPE_ID): return plane_cast(ray, geometry, t, globals);
     }
 }
 
@@ -63,6 +93,7 @@ float3 geometry_get_normal(float3 p, Geometry* geometry, Globals* globals) {
     // get normal on surface of geometry specified by type and data
     switch(geometry->type_id) {
         case (GEOMETRY_SPHERE_TYPE_ID): return sphere_normal(p, geometry, globals);
+        case (GEOMETRY_PLANE_TYPE_ID): return plane_normal(p, geometry, globals);
     }
 }
 

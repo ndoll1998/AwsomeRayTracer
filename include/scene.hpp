@@ -29,7 +29,7 @@ class Scene {
     Scene(void);
     ~Scene(void);
     /* cast ray to scene */
-    std::tuple<bool, float, Geometry*> cast(const Vec3f origin, const Vec3f dir) const;
+    bool cast(const Vec3f origin, const Vec3f dir, Geometry** geometry, float* t) const;
     /* get light color at point */
     Vec3f light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* material) const;
     /* set ambient lightning */

@@ -53,7 +53,7 @@ int camera_cast_ray(
         float3 attenuation = material_get_attenuation(p, ray->direction, normal, &material, globals);
         float3 light_color = light_get_total_light(p, ray->direction, normal, &material, lights, geometries, ambient, globals);
         // combine colors
-        *color = light_color * attenuation;
+        *color = clamp(light_color * attenuation, 0.0f, 1.0f);
         // get scatter node and update ray
         return material_get_scatter_ray(p, ray->direction, normal, &material, ray, globals);
     } else {
@@ -170,8 +170,8 @@ __kernel void camera_get_pixel_color(
     global_to_local((__global char*)light_ids,    (__local char*)loc_light_ids,    n_lights * sizeof(unsigned int));
     // read data to local memory
     global_to_local((__global char*)geometry_data, (__local char*)loc_geometry_data, n_geometry_bytes);
-    global_to_local((__global char*)material_data, (__local char*)loc_material_data, n_geometry_bytes);
-    global_to_local((__global char*)light_data,    (__local char*)loc_light_data,    n_geometry_bytes);
+    global_to_local((__global char*)material_data, (__local char*)loc_material_data, n_material_bytes);
+    global_to_local((__global char*)light_data,    (__local char*)loc_light_data,    n_light_bytes);
 
     // create containers
     Container geometries = (Container){loc_geometry_data, loc_geometry_ids, n_geometries};

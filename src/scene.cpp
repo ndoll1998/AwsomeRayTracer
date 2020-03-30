@@ -71,26 +71,23 @@ void Scene::activateCamera(unsigned int cam_id) {
     cout << "Activated camera " << cam_id << " in scene " << this->id << endl;
 }
 
-tuple<bool, float, Geometry*> Scene::cast(const Vec3f origin, const Vec3f dir) const {
+bool Scene::cast(const Vec3f origin, const Vec3f dir, Geometry** geometry, float* t) const {
 
-    float t = numeric_limits<float>::max(); Geometry* geometry = nullptr;
+    bool hit = false;
+    *t = numeric_limits<float>::max();
     // find intersection closest to origin
     for (Compressable* e : *this->geometryCompressor->get_instances()) {
         // convert compressable to geometry
         Geometry* geo = (Geometry*)e;
         // cast intersection with geometry
-        pair<bool, float> p = geo->cast(origin, dir);
-        // check if geometry is closer
-        if (p.first && (p.second < t)) {
-            t = p.second; geometry = geo;
+        float t_;
+        if (geo->cast(origin, dir, &t_)) { 
+            // and check if geometry is closer
+            if (t_ < *t) { hit = true; *t = t_; *geometry = geo; }
         }
     }
-
-    if (geometry != nullptr) {
-        // create return tuple
-        return make_tuple<bool, float, Geometry*>(true, move(t), move(geometry));
-    }
-    return make_tuple<bool, float, Geometry*>(false, 0.0, nullptr);
+    // return hit
+    return hit;
 }
 
 Vec3f Scene::light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* material) const {
@@ -101,22 +98,19 @@ Vec3f Scene::light_color(Vec3f p, Vec3f vision_dir, Vec3f normal, Material* mate
         Light* l = (Light*)e;
         // create ray toward light
         Vec3f light_dir = l->light_direction(p);
+        float distance = l->light_distance_squarred(p);
         // check if light ray is below 90 degrees
         if (Vec3f::dot(light_dir, normal) <= EPS) continue;
-        // cast ray to scene
-        tuple<bool, float, Geometry*> light_cast = this->cast(p, light_dir);
-        // unpack tuple
-        bool intersect = get<0>(light_cast);
-        float t = get<1>(light_cast);
         // on no intersection
-        if (!intersect) { 
+        float t; Geometry* tmp;
+        if ( (!this->cast(p, light_dir, &tmp, &t)) || (t*t > distance) ) { 
             // reflect light ray
             Vec3f light_reflect = light_dir.reflect(normal);
             // phong reflection model
             float diffuse = Vec3f::dot(light_dir, normal) * material->diffuse(p);
             float specular = pow(-Vec3f::dot(light_reflect, vision_dir) * material->specular(p), material->shininess(p));
             // add all together
-            light_color = light_color + l->color(p) * (diffuse + specular);
+            light_color = light_color + l->light_color(p) * (diffuse + specular);
         }
     }
     return light_color;

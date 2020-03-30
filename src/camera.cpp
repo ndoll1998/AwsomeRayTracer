@@ -79,15 +79,11 @@ void Camera::antialiasing(unsigned int n_samples) { this->n_samples = n_samples;
 
 Vec3f Camera::get_color(pair<Vec3f, Vec3f>* ray, unsigned int r_depth) const {
     // break recusion
-    if (r_depth >= MAX_RECURSION_DEPTH) { return Vec3f(0, 0, 0); }
+    if (r_depth >= MAX_RECURSION_DEPTH) { return Vec3f(1.0f, 1.0f, 1.0f); }
     // cast ray to scene
-    tuple<bool, float, Geometry*> intersect = this->scene->cast(ray->first, ray->second);
-    // unpack tuple
-    bool hit = get<0>(intersect);
-    float dist = get<1>(intersect);
-    Geometry* geo = get<2>(intersect);
+    float dist; Geometry* geo;
     // no intersection
-    if (hit) {
+    if (this->scene->cast(ray->first, ray->second, &geo, &dist)) {
         // get point of interest
         Vec3f p = ray->first + ray->second * (dist - EPS);
         // get material and normal
@@ -104,7 +100,7 @@ Vec3f Camera::get_color(pair<Vec3f, Vec3f>* ray, unsigned int r_depth) const {
             Vec3f color = attenuation * light_color * scatter_color;
             // return final color
             return color.clamp(0, 1);
-        } else return Vec3f(0, 0, 0);
+        } else return material->attenuation(p, ray->second, normal);
     } else { 
         // gradient background
         float t = 0.5 * (1.0 - ray->second.normalize().z());
@@ -124,7 +120,7 @@ Vec3f Camera::get_pixel_color(unsigned int i, unsigned int j, unsigned int w, un
         // create ray throu random position in pixel
         ray = this->ray(i + u, j + v, w, h);
         // get color of ray
-        color = color + get_color(&ray);
+        color = color + this->get_color(&ray);
     }
     // return average color
     return color * (1.0 / this->n_samples);

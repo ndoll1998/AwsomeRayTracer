@@ -50,6 +50,12 @@ typedef struct Sphere {
     float radius;
 } Sphere;
 
+typedef struct Plane {
+    // origin and normal
+    float3 origin;
+    float3 normal;
+} Plane;
+
 
 /*** Materials ***/
 

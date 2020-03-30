@@ -14,7 +14,7 @@ class Geometry : public Compressable {
     unsigned int material(void) const { return this->read(0); }
     /* abstract methods */
     /* cast ray with geometry */
-    virtual std::pair<bool, float> cast(const Vec3f origin, const Vec3f dir) const = 0;
+    virtual bool cast(const Vec3f origin, const Vec3f dir, float* t) const = 0;
     /* compute normal at given position */
     virtual Vec3f normal(const Vec3f p) const = 0;
 };
@@ -24,9 +24,9 @@ class Geometry : public Compressable {
 class SphereConfig : public Config {
     public:
     /* position and radius */
-    float x, y, z, r;
+    Vec3f center; float r;
     /* constructor */
-    SphereConfig(float x, float y, float z, float r);
+    SphereConfig(Vec3f center, float r);
 };
 
 class Sphere : public Geometry {
@@ -36,7 +36,7 @@ class Sphere : public Geometry {
     Vec3f get_center(void) const;
     float get_radius(void) const;
     /* setters */
-    void set_center(float x, float y, float z);
+    void set_center(Vec3f center);
     void set_radius(float r);
 
     public:
@@ -46,6 +46,37 @@ class Sphere : public Geometry {
     /* apply config */
     void apply(Config* config);
     /* override geometry method */
-    std::pair<bool, float> cast(const Vec3f origin, const Vec3f dir) const;
+    bool cast(const Vec3f origin, const Vec3f dir, float* t) const;
+    Vec3f normal(Vec3f p) const;
+};
+
+// Plane
+
+class PlaneConfig : public Config {
+    public:
+    /* origin and normal */
+    Vec3f origin, normal;
+    /* constructor */
+    PlaneConfig(Vec3f origin, Vec3f normal);
+};
+
+class Plane : public Geometry {
+
+    private:
+    /* getters */
+    Vec3f get_origin(void) const;
+    Vec3f get_normal(void) const;
+    /* setters */
+    void set_origin(Vec3f center);
+    void set_normal(Vec3f normal);
+
+    public:
+    /* Geometry Type ID and required size */
+    unsigned int get_type_id(void) const { return GEOMETRY_PLANE_TYPE_ID; }
+    unsigned int get_size(void) const { return GEOMETRY_PLANE_TYPE_SIZE; }
+    /* apply config */
+    void apply(Config* config);
+    /* override geometry method */
+    bool cast(const Vec3f origin, const Vec3f dir, float* t) const;
     Vec3f normal(Vec3f p) const;
 };

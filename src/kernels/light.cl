@@ -26,6 +26,14 @@ float3 pointlight_color(float3 p, Light* light, Globals* globals) {
     return plight.color;
 }
 
+float pointlight_squarred_distance(float3 p, Light* light, Globals* globals) {
+    // create pointlight from light
+    PointLight plight; pointlight_apply(light->data, &plight);
+    // return squarred distance between point and light-source
+    float3 dif = plight.position - p;
+    return dot(dif, dif);
+}
+
 
 /*** functions ***/
 
@@ -38,6 +46,12 @@ float3 light_get_direction(float3 p, Light* light, Globals* globals) {
 float3 light_get_color(float3 p, Light* light, Globals* globals) {
     switch(light->type_id) {
         case (LIGHT_POINTLIGHT_TYPE_ID): return pointlight_color(p, light, globals);
+    }
+}
+
+float light_get_squarred_distance(float3 p, Light* light, Globals* globals) {
+    switch(light->type_id) {
+        case (LIGHT_POINTLIGHT_TYPE_ID): return pointlight_squarred_distance(p, light, globals);
     }
 }
 
@@ -79,7 +93,7 @@ float3 light_get_total_light(
         if (dot(light_dir, normal) <= EPS) continue;
         // check for objects between point and light-source
         Geometry closest; float t;
-        if ( !ray_cast_to_geometries(&r, geometries, &closest, &t, globals) ) {
+        if ( (!ray_cast_to_geometries(&r, geometries, &closest, &t, globals)) || (t*t > light_get_squarred_distance(p, &l, globals)) ) {
             // reflect light ray
             float3 light_reflect = reflect(light_dir, normal);
             // phong reflection model

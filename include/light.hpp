@@ -15,8 +15,10 @@ class Light : public Compressable {
     /* abstract methods */
     /* direction toward light source from given point */
     virtual Vec3f light_direction(Vec3f p) const = 0;
+    /* distance between point and light source */
+    virtual float light_distance_squarred(Vec3f p) const = 0;
     /* light color at position p */
-    virtual Vec3f color(Vec3f p) const = 0;
+    virtual Vec3f light_color(Vec3f p) const = 0;
 };
 
 
@@ -46,5 +48,6 @@ class PointLight : public Light {
     void apply(Config* config);
     /* override light methods */
     Vec3f light_direction(Vec3f p) const;
-    Vec3f color(Vec3f p) const;
+    float light_distance_squarred(Vec3f p) const;
+    Vec3f light_color(Vec3f p) const;
 };

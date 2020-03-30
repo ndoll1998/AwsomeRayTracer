@@ -28,5 +28,7 @@ void PointLight::apply(Config* config) {
 
 // light direction
 Vec3f PointLight::light_direction(Vec3f p) const { return (this->get_position() - p).normalize(); }
+// light distance
+float PointLight::light_distance_squarred(Vec3f p) const { return Vec3f::dot(this->get_position() - p, this->get_position() - p); }
 // color at position
-Vec3f PointLight::color(Vec3f p) const { return this->get_color(); }
+Vec3f PointLight::light_color(Vec3f p) const { return this->get_color(); }
