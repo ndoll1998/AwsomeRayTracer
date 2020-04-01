@@ -4,7 +4,6 @@
 #include "src/kernels/material.cl"
 #include "src/kernels/light.cl"
 #include "src/kernels/utils.cl"
-#include "src/kernels/random.cl"
 
 void camera_get_ray_throu_pixel(Ray *ray, 
     float x, float y, 
@@ -107,8 +106,9 @@ __kernel void camera_prepare_globals(
 
     // read globals to private address space
     Globals globals = all_globals[i];
-    // initialize random number generator
-    MWC64X_SeedStreams(&globals.rng, y*w, 2 * i);
+    // initialize seeds for random number generation
+    globals.seed0 = y;
+    globals.seed1 = x;
     // store globals back in global address space
     all_globals[i] = globals;
 }

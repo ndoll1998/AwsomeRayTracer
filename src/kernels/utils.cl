@@ -1,5 +1,4 @@
 #pragma once
-#include "src/kernels/random.cl"
 #include "src/kernels/structs.cl"
 
 /*** random numbers ***/
@@ -7,8 +6,21 @@
 #define RANDOM_MAX 4294967296
 
 float randf(Globals* globals) {
-    // generate random number in [0, 1)
-    return (float)MWC64X_NextUint(&globals->rng) / RANDOM_MAX;
+
+	/* hash the seeds using bitwise AND operations and bitshifts */
+	globals->seed0 = 36969 * ((globals->seed0) & 65535) + ((globals->seed0) >> 16);
+	globals->seed1 = 18000 * ((globals->seed1) & 65535) + ((globals->seed1) >> 16);
+
+	unsigned int ires = ((globals->seed0) << 16) + (globals->seed1);
+
+	/* use union struct to convert int to float */
+	union {
+		float f;
+		unsigned int ui;
+	} res;
+
+	res.ui = (ires & 0x007fffff) | 0x40000000;  /* bitwise AND, bitwise OR */
+	return (res.f - 2.0f) / 2.0f;
 }
 
 /*** Vector-Operations ***/

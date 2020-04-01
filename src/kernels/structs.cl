@@ -1,5 +1,4 @@
 #pragma once
-#include "src/kernels/random.cl"
 
 /*** Camera ***/
 
@@ -89,9 +88,10 @@ typedef struct PointLight {
 } PointLight;
 
 /*** Globals ***/
+// if changing this struct remember to also adjust the allocated size in host code
 
 typedef struct Globals {
     // values that need to be globally accessable in each work-item but can differ between work-items
     // random number generator
-    mwc64x_state_t rng;
+    unsigned int seed0, seed1;
 } Globals;
