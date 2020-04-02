@@ -9,10 +9,13 @@
 
 /* Sphere */
 #define GEOMETRY_SPHERE_TYPE_ID 0
-#define GEOMETRY_SPHERE_TYPE_SIZE 1 + 4
+#define GEOMETRY_SPHERE_TYPE_SIZE 1 + 4     // first value defines applied material id
 /* Plane */
 #define GEOMETRY_PLANE_TYPE_ID 1
-#define GEOMETRY_PLANE_TYPE_SIZE 1 + 6
+#define GEOMETRY_PLANE_TYPE_SIZE 1 + 6      // first value defines applied material id
+/* Triangle */
+#define GEOMETRY_TRIANGLE_TYPE_ID 2
+#define GEOMETRY_TRIANGLE_TYPE_SIZE 1 + 9   // first value defines applied material id
 
 
 /*** Materials ***/

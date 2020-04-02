@@ -80,3 +80,37 @@ class Plane : public Geometry {
     bool cast(const Vec3f origin, const Vec3f dir, float* t) const;
     Vec3f normal(Vec3f p) const;
 };
+
+
+// Triangle
+
+class TriangleConfig : public Config {
+    public:
+    /* origin and normal */
+    Vec3f A, B, C;
+    /* constructor */
+    TriangleConfig(Vec3f A, Vec3f B, Vec3f C);
+};
+
+class Triangle : public Plane {
+
+    private:
+    /* getters */
+    Vec3f get_A(void) const;
+    Vec3f get_B(void) const;
+    Vec3f get_C(void) const;
+    /* setters */
+    void set_A(Vec3f A);
+    void set_B(Vec3f B);
+    void set_C(Vec3f C);
+
+    public:
+    /* Geometry Type ID and required size */
+    unsigned int get_type_id(void) const { return GEOMETRY_TRIANGLE_TYPE_ID; }
+    unsigned int get_size(void) const { return GEOMETRY_TRIANGLE_TYPE_SIZE; }
+    /* apply config */
+    void apply(Config* config);
+    /* override geometry method */
+    bool cast(const Vec3f origin, const Vec3f dir, float* t) const;
+    Vec3f normal(Vec3f p) const;
+};

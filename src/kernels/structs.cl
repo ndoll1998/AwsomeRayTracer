@@ -55,6 +55,10 @@ typedef struct Plane {
     float3 normal;
 } Plane;
 
+typedef struct Triangle {
+    // points
+    float3 A, B, C;
+} Triangle;
 
 /*** Materials ***/
 

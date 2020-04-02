@@ -90,6 +90,23 @@ void cornell_scene(Scene* scene) {
     scene->addLight<PointLight>(new PointLightConfig(0, 4.5, -2.4, 1, 1, 1));
 }
 
+void triangle_scene(Scene* scene) {
+    // scene ambient light
+    scene->ambient(Vec3f(0.8, 0.8, 0.8));
+    // set up camera
+    unsigned int main_cam_id = scene->addCamera();
+    scene->activateCamera(main_cam_id);
+    scene->get_active_camera()->transform(Vec3f(0, -3, 0), Vec3f(0, 1, 0), Vec3f(0, 0, 1));
+    scene->get_active_camera()->FOV(90);
+    
+    // add materials
+    unsigned int red  = scene->addMaterial<DiffuseMaterial>(new DiffuseMaterialConfig(1, 0, 0, 1, 0, 0));
+    // add triangle
+    unsigned int T1 = scene->addGeometry<Triangle>(new TriangleConfig(Vec3f(-1, 2, 0), Vec3f(0, 2, 1), Vec3f(1, 2, 0)));
+    // apply materials to geometries
+    scene->get_geometry(T1)->assign_material(red);
+}
+
 int main() {
 
     // get opencl device to use
@@ -107,11 +124,12 @@ int main() {
     Scene *scene = new Scene();
     // set up scene
     // dielectric_scene(scene);
-    cornell_scene(scene);
+    // cornell_scene(scene);
+    box_scene(scene);
 
     // assign opencl device to camera and set antialiasing
     scene->get_active_camera()->assign(device);
-    scene->get_active_camera()->antialiasing(100);
+    scene->get_active_camera()->antialiasing(1);
 
     // add scene to engine
     unsigned int scene_id = e->addScene(scene);
@@ -119,7 +137,7 @@ int main() {
     // run engine
     // e->run();
     // save image to file
-    scene->get_active_camera()->render_to_file("img/cornell_gpu.bmp", 800, 600, 4);
+    scene->get_active_camera()->render_to_file("img/test.bmp", 800, 600, 4);
 
     // destroy
     delete scene;

@@ -1,6 +1,6 @@
 #include "include/_defines.h"
-#include "src/kernels/structs.cl"
 #include "src/kernels/ray.cl"
+#include "src/kernels/structs.cl"
 #include "src/kernels/material.cl"
 #include "src/kernels/light.cl"
 #include "src/kernels/utils.cl"
@@ -11,7 +11,6 @@ void camera_get_ray_throu_pixel(Ray *ray,
     Camera cam,
     // globals
     Globals* globals
-
 ) {
     // compute vertical field of view
     float v_fov = ((float)h / (float)w) * cam.fov;

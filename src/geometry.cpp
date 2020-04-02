@@ -74,7 +74,6 @@ void Plane::set_normal(Vec3f n) { this->write(4, n.x()); this->write(5, n.y()); 
 void Plane::apply(Config* config) {
     // convert config
     PlaneConfig* config_ = (PlaneConfig*)config;
-    Vec3f normal = config_->normal;
     // apply values from configuration
     this->set_origin(config_->origin);
     this->set_normal(config_->normal);
@@ -83,7 +82,7 @@ void Plane::apply(Config* config) {
 // ray-cast method
 bool Plane::cast(const Vec3f origin, const Vec3f dir, float* t) const {
     // get normal and check if plane and ray are aligned
-    Vec3f normal = this->get_normal();
+    Vec3f normal = this->normal(origin);
     float denom = Vec3f::dot(normal, dir); 
     if (denom < -EPS) { 
         // compute distance to intersection point
@@ -97,4 +96,76 @@ bool Plane::cast(const Vec3f origin, const Vec3f dir, float* t) const {
 
 
 // normal of plane
-Vec3f Plane::normal(Vec3f p) const { return this->get_normal(); }
+Vec3f Plane::normal(Vec3f p) const { 
+    // get direction from p towards plane
+    Vec3f u = this->get_origin() - p;
+    // return normal facing towards given point
+    Vec3f normal = this->get_normal(); 
+    return (Vec3f::dot(u, normal) < 0)? normal : (normal * -1);
+}
+
+
+/* Plane */
+
+// Config
+TriangleConfig::TriangleConfig(Vec3f A, Vec3f B, Vec3f C): A(A), B(B), C(C) {}
+
+// getters
+Vec3f Triangle::get_A(void) const { return Vec3f(this->read(1), this->read(2), this->read(3)); }
+Vec3f Triangle::get_B(void) const { return Vec3f(this->read(4), this->read(5), this->read(6)); }
+Vec3f Triangle::get_C(void) const { return Vec3f(this->read(7), this->read(8), this->read(9)); }
+// setters
+void Triangle::set_A(Vec3f A) { this->write(1, A.x()); this->write(2, A.y()); this->write(3, A.z()); }
+void Triangle::set_B(Vec3f B) { this->write(4, B.x()); this->write(5, B.y()); this->write(6, B.z()); }
+void Triangle::set_C(Vec3f C) { this->write(7, C.x()); this->write(8, C.y()); this->write(9, C.z()); }
+
+// apply config
+void Triangle::apply(Config* config) {
+    // convert config
+    TriangleConfig* config_ = (TriangleConfig*)config;
+    // apply values from configuration
+    this->set_A(config_->A);
+    this->set_B(config_->B);
+    this->set_C(config_->C);
+}
+
+// ray-cast method
+bool Triangle::cast(const Vec3f origin, const Vec3f dir, float* t) const {
+    // check plane intersection
+    if (!Plane::cast(origin, dir, t)) return false;
+    // check if intersection point is in triangle
+    Vec3f P = origin + dir * (*t);
+
+    // check with all edges of the triangle
+    Vec3f A = this->get_A();
+    Vec3f B = this->get_B();
+    Vec3f C = this->get_C();
+    // get unnormalized normal pointing towards origin of ray
+    Vec3f normal = Vec3f::cross(A - B, A - C);
+    normal = normal * ((Vec3f::dot(A - origin, normal) < 0)? 1 : -1);
+    // AB
+    Vec3f AB_AP = Vec3f::cross(B - A, P - A);    
+    if (Vec3f::dot(AB_AP, normal) > 0) return false;
+    // BC
+    Vec3f BC_BP = Vec3f::cross(C - B, P - B);    
+    if (Vec3f::dot(BC_BP, normal) > 0) return false;
+    // CA
+    Vec3f CA_CP = Vec3f::cross(A - C, P - C);    
+    if (Vec3f::dot(CA_CP, normal) > 0) return false;
+    // P is inside triangle
+    return true;
+}
+
+
+// normal of plane
+Vec3f Triangle::normal(Vec3f p) const {
+    Vec3f A = this->get_A();
+    // get direction
+    Vec3f u = A - p;
+    // get spanning vectors
+    Vec3f v = A - this->get_B();
+    Vec3f w = A - this->get_C(); 
+    // compute normal facing towards given point
+    Vec3f normal = Vec3f::cross(v, w).normalize();
+    return (Vec3f::dot(u, normal) < 0)? normal : (normal * -1);
+}

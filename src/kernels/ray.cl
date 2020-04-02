@@ -1,12 +1,14 @@
 #pragma once
 #include "src/kernels/structs.cl"
-#include "src/kernels/geometry.cl"
 #include "include/_defines.h"
 
 float3 ray_advance(Ray* ray, float t) {
     // compute point on ray at distance t
     return ray->origin + ray->direction * t;
 }
+
+// include here so ray_advance is defined in geometry.cl
+#include "src/kernels/geometry.cl"
 
 int ray_cast_to_geometries(
     Ray* ray,
