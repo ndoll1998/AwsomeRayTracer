@@ -6,31 +6,24 @@
 
 /*** Point Light ***/
 
-void pointlight_apply(__local float* data, PointLight* light) {
-    // read data into light struct
-    light->color = (float3)(data[0], data[1], data[2]);
-    light->position = (float3)(data[3], data[4], data[5]);
+float3 pointlight_get_position(Light* light) {
+    // get position values of light
+    return (float3)(light->data[3], light->data[4], light->data[5]);
 }
 
 float3 pointlight_direction(float3 p, Light* light, Globals* globals) {
-    // create pointlight from light
-    PointLight plight; pointlight_apply(light->data, &plight);
     // return direction from p to light position
-    return normalize(plight.position - p);
+    return normalize(pointlight_get_position(light) - p);
 }
 
 float3 pointlight_color(float3 p, Light* light, Globals* globals) {
-    // create pointlight from light
-    PointLight plight; pointlight_apply(light->data, &plight);
     // return color
-    return plight.color;
+    return (float3)(light->data[0], light->data[1], light->data[2]);
 }
 
 float pointlight_squarred_distance(float3 p, Light* light, Globals* globals) {
-    // create pointlight from light
-    PointLight plight; pointlight_apply(light->data, &plight);
     // return squarred distance between point and light-source
-    float3 dif = plight.position - p;
+    float3 dif = pointlight_get_position(light) - p;
     return dot(dif, dif);
 }
 

@@ -111,33 +111,33 @@ int main() {
 
     // get opencl device to use
     vector<cl::Platform> platforms; cl::Platform::get(&platforms);
-    vector<cl::Device> devices; platforms[1].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+    vector<cl::Device> devices; platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
     cl::Device device = devices[0];
 
     // create engine
     Engine *e = new Engine();
     // create window and assign it to engine
     Window *win = new Window(500, 300);
-    // e->assign(win); win->show();
+    e->assign(win); win->show();
 
     // create scene
     Scene *scene = new Scene();
     // set up scene
     // dielectric_scene(scene);
-    // cornell_scene(scene);
-    box_scene(scene);
+    cornell_scene(scene);
+    // triangle_scene(scene);
 
     // assign opencl device to camera and set antialiasing
     scene->get_active_camera()->assign(device);
-    scene->get_active_camera()->antialiasing(1);
+    scene->get_active_camera()->antialiasing(4);
 
     // add scene to engine
     unsigned int scene_id = e->addScene(scene);
     e->activateScene(scene_id);
     // run engine
-    // e->run();
+    e->run();
     // save image to file
-    scene->get_active_camera()->render_to_file("img/test.bmp", 800, 600, 4);
+    // scene->get_active_camera()->render_to_file("img/test.bmp", 800, 600, 4);
 
     // destroy
     delete scene;

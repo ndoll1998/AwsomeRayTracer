@@ -66,6 +66,11 @@ float3 rand_in_unit_sphere(Globals* globals) {
     return normalize(v) * s;
 }
 
+float3 face_normal_towards_point(float3 p, float3 o, float3 n) {
+    // return vector facing towards given point
+    return (dot(o - p, n) < 0)? n : -n;
+}
+
 /*** Memory ***/
 
 void global_to_local(__global char* global_data, __local char* local_data, unsigned int size) {

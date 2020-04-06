@@ -40,57 +40,6 @@ typedef struct Compressable {
 #define Geometry Compressable
 #define Light Compressable
 
-
-/*** Geometries ***/
-
-typedef struct Sphere {
-    // center and radius
-    float3 center;
-    float radius;
-} Sphere;
-
-typedef struct Plane {
-    // origin and normal
-    float3 origin;
-    float3 normal;
-} Plane;
-
-typedef struct Triangle {
-    // points
-    float3 A, B, C;
-} Triangle;
-
-/*** Materials ***/
-
-typedef struct DiffuseMaterial {
-    // attenuation
-    float3 attenuation;
-    // phong values
-    float diffuse, specular, shininess;
-} DiffuseMaterial;
-
-typedef struct MetalMaterial {
-    // base on diffuse material
-    DiffuseMaterial base;
-    // fuzzyness
-    float fuzz;
-} MetalMaterial;
-
-typedef struct DielectricMaterial {
-    // phong values
-    float diffuse, specular, shininess;
-    // index of refraction
-    float ior;
-} DielectricMaterial;
-
-/*** Lights ***/
-
-typedef struct PointLight {
-    // position and color
-    float3 position;
-    float3 color;
-} PointLight;
-
 /*** Globals ***/
 // if changing this struct remember to also adjust the allocated size in host code
 

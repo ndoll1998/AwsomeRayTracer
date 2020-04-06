@@ -2,22 +2,23 @@
 #include "include/_defines.h"
 #include "src/kernels/ray.cl"
 #include "src/kernels/structs.cl"
+#include "src/kernels/utils.cl"
 
 /*** Sphere ***/
 
-void sphere_apply(__local float* data, Sphere* sphere) {
-    // read data into sphere
-    sphere->center = (float3)(data[1], data[2], data[3]);
-    sphere->radius = data[4];
+float3 sphere_get_center(Geometry* geometry) {
+    // return center of sphere
+    return (float3)(geometry->data[1], geometry->data[2], geometry->data[3]);
 }
 
 int sphere_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
-    // create sphere from data
-    Sphere s; sphere_apply(geometry->data, &s);
+    // get sphere information
+    float3 center = sphere_get_center(geometry);
+    float radius = geometry->data[4];
     // analytic solution of sphere-ray-intersection
-    float3 L = ray->origin - s.center;
+    float3 L = ray->origin - sphere_get_center(geometry);
     float b = dot(ray->direction, L) * 2;
-    float c = dot(L, L) - s.radius * s.radius;
+    float c = dot(L, L) - (radius * radius);
     // solve quadratic function
     float discr = b * b - 4 * c;
     // no intersection
@@ -36,102 +37,109 @@ int sphere_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
 }
 
 float3 sphere_normal(float3 p, Geometry* geometry, Globals* globals){
-    // create sphere from data
-    Sphere s; sphere_apply(geometry->data, &s);
+    // get sphere information
+    float3 center = sphere_get_center(geometry);
+    float radius = geometry->data[4];
     // compute normalized normal at position p on surface
-    return (p - s.center) / s.radius;
+    return (p - center) / radius;
 }
+
 
 /*** Plane ***/
 
-float3 _plane_normal(float3 p, Plane* plane) {
-    // return normal facing towards p
-    float3 u = plane->origin - p;
-    // compute normal facing towards given point
-    return (dot(u, plane->normal) < 0)? plane->normal : -plane->normal;
-}
-
-int _plane_cast(Ray* ray, Plane* plane, float* t) {
+int _plane_cast(Ray* ray, float3 o, float3 n, float* t) {
     // get normal facing towards ray origin
-    float3 normal = _plane_normal(ray->origin, plane);
+    n = face_normal_towards_point(ray->origin, o, n);
     // get normal and check if plane and ray are aligned
-    float denom = dot(plane->normal, ray->direction); 
+    float denom = dot(n, ray->direction); 
     if (denom < -EPS) { 
         // compute distance to intersection point
-        float3 p = plane->origin - ray->origin; 
-        *t = dot(p, plane->normal) / denom;
+        float3 p = o - ray->origin; 
+        *t = dot(p, n) / denom;
         return (*t >= EPS);
     } 
     // no intersection
     return 0; 
 }
 
-void plane_apply(__local float* data, Plane* plane) {
-    // read origin and normal
-    plane->origin = (float3)(data[1], data[2], data[3]);
-    plane->normal = (float3)(data[4], data[5], data[6]);
+float3 plane_get_origin(Geometry* geometry) {
+    // return origin of plane
+    return (float3)(geometry->data[1], geometry->data[2], geometry->data[3]);
+}
+
+float3 plane_get_normal(Geometry* geometry) {
+    // return normal of plane
+    return (float3)(geometry->data[4], geometry->data[5], geometry->data[6]);
 }
 
 int plane_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
-    // create plane from data
-    Plane plane; plane_apply(geometry->data, &plane);
     // check intersection with plane
-    return _plane_cast(ray, &plane, t);
+    return _plane_cast(ray, plane_get_origin(geometry), plane_get_normal(geometry), t);
 }
 
 float3 plane_normal(float3 p, Geometry* geometry, Globals* globals) {
-    // create plane from data
-    Plane plane; plane_apply(geometry->data, &plane);
     // return normal facing towards point p
-    return _plane_normal(p, &plane);
+    return face_normal_towards_point(p, plane_get_origin(geometry), plane_get_normal(geometry));
 }
+
 
 /*** Triangle ***/
 
-float3 _triangle_normal(float3 p, Triangle* T) {
+float3 _triangle_normal(float3 p, float3 A, float3 B, float3 C) {
     // get direction
-    float3 u = T->A - p;
+    float3 u = A - p;
     // compute normal facing towards given point
-    float3 n = cross(T->A - T->B, T->A - T->C);
-    return (dot(u, n) < 0)? n : -n;
+    float3 n = cross(A - B, A - C);
+    return face_normal_towards_point(p, A, n);
 }
 
-void triangle_apply(__local float* data, Triangle* triangle) {
-    // read points from data
-    triangle->A = (float3)(data[1], data[2], data[3]);
-    triangle->B = (float3)(data[4], data[5], data[6]);
-    triangle->C = (float3)(data[7], data[8], data[9]);
+float3 triangle_get_A(Geometry* geometry) {
+    // return A
+    return (float3)(geometry->data[1], geometry->data[2], geometry->data[3]);
+}
+
+float3 triangle_get_B(Geometry* geometry) {
+    // return A
+    return (float3)(geometry->data[4], geometry->data[5], geometry->data[6]);
+}
+
+float3 triangle_get_C(Geometry* geometry) {
+    // return A
+    return (float3)(geometry->data[7], geometry->data[8], geometry->data[9]);
 }
 
 int triangle_cast(Ray* ray, Geometry* geometry, float* t, Globals* globals) {
     // create Triangle from data
-    Triangle T; triangle_apply(geometry->data, &T);
+    float3 A = triangle_get_A(geometry);
+    float3 B = triangle_get_B(geometry);
+    float3 C = triangle_get_C(geometry);
     // get unnormalized normal of triangle
-    float3 normal = _triangle_normal(ray->origin, &T);
-    // create plane containing triangle and check intersection
-    Plane plane = (Plane){T.A, normal};
-    if (!_plane_cast(ray, &plane, t)) return 0;
+    float3 normal = _triangle_normal(ray->origin, A, B, C);
+    // cast ray to plane
+    if (!_plane_cast(ray, A, normal, t)) return 0;
     // get point of intersection
     float3 P = ray_advance(ray, *t);
     // check with all edges of the triangle
     // AB
-    float3 AB_AP = cross(T.B - T.A, P - T.A);
+    float3 AB_AP = cross(B - A, P - A);
     if (dot(AB_AP, normal) > 0) return 0;
     // AB
-    float3 BC_BP = cross(T.C - T.B, P - T.B);
+    float3 BC_BP = cross(C - B, P - B);
     if (dot(BC_BP, normal) > 0) return 0;
     // AB
-    float3 CA_CP = cross(T.A - T.C, P - T.C);
+    float3 CA_CP = cross(A - C, P - C);
     if (dot(CA_CP, normal) > 0) return 0;
     // P is inside triangle
     return 1;
 }
 
 float3 triangle_normal(float3 p, Geometry* geometry, Globals* globals) {
-    // create triangle from data
-    Triangle T; triangle_apply(geometry->data, &T);
+    // create Triangle from data
+    float3 A = triangle_get_A(geometry);
+    float3 B = triangle_get_B(geometry);
+    float3 C = triangle_get_C(geometry);
     // return normalized normal facing towards p
-    return normalize(_triangle_normal(p, &T));
+    return normalize(_triangle_normal(p, A, B, C));
 }
 
 /*** functions ***/
